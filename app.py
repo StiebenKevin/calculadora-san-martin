@@ -89,7 +89,7 @@ with tab1:
                 f"- ${t['limite_12_to_15']:,} o más ➡️ 15‰ (Grande)")
 
 with tab2:
-    st.header(f"Control de Inconsistencias Masivo ({anio_sel})")
+    st.header(f"Control de Alicuota")
     st.markdown(f"Subí el Excel. El cruce y cálculo se realizará con los parámetros de **{anio_sel}**.")
     
     archivo = st.file_uploader("Cargar archivo Excel (.xlsx)", type=["xlsx"])
