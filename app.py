@@ -111,9 +111,9 @@ with tab2:
                 # Realizar el cálculo matemático
                 resultados = df.apply(lambda r: evaluar_contribuyente(anio_mas, r[col_sec], r[col_ing]), axis=1)
                 
-                df['Año_Fiscal_Auditado'] = anio_mas
-                df['Categoría_Calculada'] = [res[0] for res in resultados]
-                df['Alícuota_Calculada_‰'] = [res[1] for res in resultados]
+                df['Año'] = anio_mas
+                df['Tamaño'] = [res[0] for res in resultados]
+                df['Alícuota'] = [res[1] for res in resultados]
                 
                 st.success(f"¡Procesamiento completado usando la escala {anio_mas}!")
                 
