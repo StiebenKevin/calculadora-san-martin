@@ -13,9 +13,7 @@ try:
 except:
     st.subheader("Municipalidad de General San Martín")
 
-st.title("📊 Calculadora de Alícuotas e Inconsistencias Fiscales")
-st.markdown("Herramienta interna para la Dirección de Inteligencia Fiscal")
-st.markdown("---")
+st.title("📊 Calculadora de Alícuotas")
 
 # 1. ESTRUCTURA DE ESCALAS POR AÑO FISCAL (2025 y 2026 Corregidas)
 escalas_por_anio = {
@@ -58,7 +56,7 @@ def evaluar_contribuyente(anio, sector, ingresos):
         return "Grande", 15
 
 # Pestañas de la aplicación
-tab1, tab2 = st.tabs(["🧮 Calculadora Individual", "📂 Procesamiento Masivo (Excel)"])
+tab1, tab2 = st.tabs(["🧮 Calculadora Individual", "📂 Calculadora Masiva (Excel)"])
 
 with tab1:
     st.header("Consulta Individual de Contribuyente")
@@ -69,9 +67,9 @@ with tab1:
     with col_a:
         anio_ind = st.selectbox("📅 Período:", [2026, 2025], key="anio_individual")
     with col_b:
-        sector_sel = st.selectbox("Seleccione el Sector de Actividad:", list(escalas_por_anio[anio_ind].keys()))
+        sector_sel = st.selectbox("Seleccione la actividad:", list(escalas_por_anio[anio_ind].keys()))
     with col_c:
-        ingresos_num = st.number_input("Ingresos Brutos Anuales ($):", min_value=0.0, step=10000.0, format="%.2f")
+        ingresos_num = st.number_input("Total Ingresos gravados, no gravados y exentos del periodo fiscal anterior ($):", min_value=0.0, step=10000.0, format="%.2f")
         
     if st.button("Calcular Alícuota", type="primary"):
         cat, alic = evaluar_contribuyente(anio_ind, sector_sel, ingresos_num)
@@ -87,8 +85,8 @@ with tab1:
                 f"- ${t['limite_12_to_15']:,} o más ➡️ 15‰ (Grande)")
 
 with tab2:
-    st.header("Control de Inconsistencias Masivo")
-    st.markdown("Subí el Excel con el padrón para cruzar los datos y calcular diferencias automáticamente.")
+    st.header("Control de Alicuotas")
+    st.markdown("Subír el Excel para calcular")
     
     archivo = st.file_uploader("Cargar archivo Excel (.xlsx)", type=["xlsx"])
     
@@ -103,13 +101,13 @@ with tab2:
             # Columnas de mapeo y selección de año lado a lado
             col_x, col_y, col_z = st.columns(3)
             with col_x:
-                col_sec = st.selectbox("Columna SECTOR / ACTIVIDAD:", columnas)
+                col_sec = st.selectbox("Columna SECTOR:", columnas)
             with col_y:
-                col_ing = st.selectbox("Columna INGRESOS / EMISIÓN:", columnas)
+                col_ing = st.selectbox("Columna INGRESOS:", columnas)
             with col_z:
                 anio_mas = st.selectbox("📅 Año Fiscal a Auditar:", [2026, 2025], key="anio_masivo")
             
-            if st.button("Procesar y Buscar Inconsistencias", type="primary"):
+            if st.button("Procesar y Buscar", type="primary"):
                 # Realizar el cálculo matemático
                 resultados = df.apply(lambda r: evaluar_contribuyente(anio_mas, r[col_sec], r[col_ing]), axis=1)
                 
@@ -133,7 +131,7 @@ with tab2:
                 processed_data = output.getvalue()
                 
                 st.download_button(
-                    label=f"📥 Descargar Excel Controlado {anio_mas}",
+                    label=f"📥 Descargar Excel {anio_mas}",
                     data=processed_data,
                     file_name=f"control_fiscal_{anio_mas}.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
