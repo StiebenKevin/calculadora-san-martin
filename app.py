@@ -20,7 +20,7 @@ st.markdown("Herramienta interna para la Dirección de Inteligencia Fiscal")
 # Nota: Podés cambiar las URLs de abajo por los links exactos del digesto o boletín oficial de la muni
 escalas_por_anio = {
     2026: {
-        "link_ordenanza": "https://im.sanmartin.gov.ar/normativa/?_gl=1*v19aqv*_ga*MTY5NzkxNzc5OC4xNzIzMDMxNTYw*_ga_53LXLVYKXM*czE3ODA2Njc1MzkkbzM3JGcxJHQxNzgwNjY3NTY2JGozMyRsMCRoMA..",  # <-- Reemplazar por el link de la de 2026
+        "https://im.sanmartin.gov.ar/normativa/?_gl=1*v19aqv*_ga*MTY5NzkxNzc5OC4xNzIzMDMxNTYw*_ga_53LXLVYKXM*czE3ODA2Njc1MzkkbzM3JGcxJHQxNzgwNjY3NTY2JGozMyRsMCRoMA..",  # <-- Reemplazar por el link de la de 2026
         "sectores": {
             "Agropecuario": {"limite_5_a_7": 244789000, "limite_7_a_8": 368103000, "limite_8_to_12": 1187425000, "limite_12_to_15": 3492431000},
             "Industria y Minería": {"limite_5_a_7": 723725000, "limite_7_a_8": 1088308000, "limite_8_to_12": 3510670000, "limite_12_to_15": 10325497000},
@@ -30,7 +30,7 @@ escalas_por_anio = {
         }
     },
     2025: {
-        "link_ordenanza": "https://im.sanmartin.gov.ar/normativa/?_gl=1*v19aqv*_ga*MTY5NzkxNzc5OC4xNzIzMDMxNTYw*_ga_53LXLVYKXM*czE3ODA2Njc1MzkkbzM3JGcxJHQxNzgwNjY3NTY2JGozMyRsMCRoMA..",  # <-- Reemplazar por el link de la de 2025
+        "https://im.sanmartin.gov.ar/normativa/?_gl=1*v19aqv*_ga*MTY5NzkxNzc5OC4xNzIzMDMxNTYw*_ga_53LXLVYKXM*czE3ODA2Njc1MzkkbzM3JGcxJHQxNzgwNjY3NTY2JGozMyRsMCRoMA..",  # <-- Reemplazar por el link de la de 2025
         "sectores": {
             "Agropecuario": {"limite_5_a_7": 188939000, "limite_7_a_8": 284118000, "limite_8_to_12": 916506000, "limite_12_to_15": 2695609000},
             "Industria y Minería": {"limite_5_a_7": 558602000, "limite_7_a_8": 840003000, "limite_8_to_12": 2709687000, "limite_12_to_15": 7969664000},
