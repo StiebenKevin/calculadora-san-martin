@@ -13,14 +13,11 @@ try:
 except:
     st.subheader("Municipalidad de General San Martín")
 
-st.title("📊 Calculadora de Alícuotas e Inconsistencias Fiscales")
-st.markdown("Herramienta interna para la Dirección de Inteligencia Fiscal")
-st.markdown("---")
+st.title("📊 Calculadora de Alícuotas")
 
 # 1. ESTRUCTURA DE ESCALAS Y LINKS POR AÑO FISCAL
 escalas_por_anio = {
     2026: {
-        "link_ordenanza": "https://www.sanmartin.gov.ar/",
         "sectores": {
             "Agropecuario": {"limite_5_a_7": 244789000, "limite_7_a_8": 368103000, "limite_8_to_12": 1187425000, "limite_12_to_15": 3492431000},
             "Industria y Minería": {"limite_5_a_7": 723725000, "limite_7_a_8": 1088308000, "limite_8_to_12": 3510670000, "limite_12_to_15": 10325497000},
@@ -30,7 +27,6 @@ escalas_por_anio = {
         }
     },
     2025: {
-        "link_ordenanza": "https://www.sanmartin.gov.ar/",
         "sectores": {
             "Agropecuario": {"limite_5_a_7": 188939000, "limite_7_a_8": 284118000, "limite_8_to_12": 916506000, "limite_12_to_15": 2695609000},
             "Industria y Minería": {"limite_5_a_7": 558602000, "limite_7_a_8": 840003000, "limite_8_to_12": 2709687000, "limite_12_to_15": 7969664000},
@@ -64,7 +60,7 @@ def evaluar_contribuyente(anio, sector, ingresos):
         return "Grande", 15
 
 # Pestañas de la aplicación
-tab1, tab2 = st.tabs(["🧮 Calculadora Individual", "📂 Procesamiento Masivo (Excel)"])
+tab1, tab2 = st.tabs(["🧮 Calculadora Individual", "📂 Calculadora Masiva (Excel)"])
 
 with tab1:
     st.header("Consulta Individual de Contribuyente")
@@ -75,9 +71,9 @@ with tab1:
     with col_a:
         anio_ind = st.selectbox("📅 Período:", [2026, 2025], key="anio_individual")
     with col_b:
-        sector_sel = st.selectbox("Seleccione el Sector de Actividad:", list(escalas_por_anio[anio_ind]["sectores"].keys()))
+        sector_sel = st.selectbox("Seleccione la actividad:", list(escalas_por_anio[anio_ind]["sectores"].keys()))
     with col_c:
-        ingresos_num = st.number_input("Ingresos Brutos Anuales ($):", min_value=0.0, step=10000.0, format="%.2f")
+        ingresos_num = st.number_input("Total ingresos gravados, no gravados y exentos del periodo fiscal anterior  ($):", min_value=0.0, step=10000.0, format="%.2f")
         
     if st.button("Calcular Alícuota", type="primary"):
         cat, alic = evaluar_contribuyente(anio_ind, sector_sel, ingresos_num)
