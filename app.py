@@ -16,21 +16,28 @@ except:
 st.title("📊 Calculadora de Alícuotas e Inconsistencias Fiscales")
 st.markdown("Herramienta interna para la Dirección de Inteligencia Fiscal")
 
-# 1. ESTRUCTURA DE ESCALAS POR AÑO FISCAL (2025 y 2026 Corregidas)
+# 1. ESTRUCTURA DE ESCALAS Y LINKS POR AÑO FISCAL
+# Nota: Podés cambiar las URLs de abajo por los links exactos del digesto o boletín oficial de la muni
 escalas_por_anio = {
     2026: {
-        "Agropecuario": {"limite_5_a_7": 244789000, "limite_7_a_8": 368103000, "limite_8_to_12": 1187425000, "limite_12_to_15": 3492431000},
-        "Industria y Minería": {"limite_5_a_7": 723725000, "limite_7_a_8": 1088308000, "limite_8_to_12": 3510670000, "limite_12_to_15": 10325497000},
-        "Comercio": {"limite_5_a_7": 966148000, "limite_7_a_8": 1453321000, "limite_8_to_12": 4686623000, "limite_12_to_15": 13784189000},
-        "Servicios": {"limite_5_a_7": 236512000, "limite_7_a_8": 355658000, "limite_8_to_12": 1147282000, "limite_12_to_15": 3374357000},
-        "Construcción": {"limite_5_a_7": 289552000, "limite_7_a_8": 458798000, "limite_8_to_12": 1479990000, "limite_12_to_15": 4352914000}
+        "link_ordenanza": "https://im.sanmartin.gov.ar/normativa/?_gl=1*v19aqv*_ga*MTY5NzkxNzc5OC4xNzIzMDMxNTYw*_ga_53LXLVYKXM*czE3ODA2Njc1MzkkbzM3JGcxJHQxNzgwNjY3NTY2JGozMyRsMCRoMA..",  # <-- Reemplazar por el link de la de 2026
+        "sectores": {
+            "Agropecuario": {"limite_5_a_7": 244789000, "limite_7_a_8": 368103000, "limite_8_to_12": 1187425000, "limite_12_to_15": 3492431000},
+            "Industria y Minería": {"limite_5_a_7": 723725000, "limite_7_a_8": 1088308000, "limite_8_to_12": 3510670000, "limite_12_to_15": 10325497000},
+            "Comercio": {"limite_5_a_7": 966148000, "limite_7_a_8": 1453321000, "limite_8_to_12": 4686623000, "limite_12_to_15": 13784189000},
+            "Servicios": {"limite_5_a_7": 236512000, "limite_7_a_8": 355658000, "limite_8_to_12": 1147282000, "limite_12_to_15": 3374357000},
+            "Construcción": {"limite_5_a_7": 289552000, "limite_7_a_8": 458798000, "limite_8_to_12": 1479990000, "limite_12_to_15": 4352914000}
+        }
     },
     2025: {
-        "Agropecuario": {"limite_5_a_7": 188939000, "limite_7_a_8": 284118000, "limite_8_to_12": 916506000, "limite_12_to_15": 2695609000},
-        "Industria y Minería": {"limite_5_a_7": 558602000, "limite_7_a_8": 840003000, "limite_8_to_12": 2709687000, "limite_12_to_15": 7969664000},
-        "Comercio": {"limite_5_a_7": 745715000, "limite_7_a_8": 1121376000, "limite_8_to_12": 3617338000, "limite_12_to_15": 10639232000},
-        "Servicios": {"limite_5_a_7": 182550000, "limite_7_a_8": 274512000, "limite_8_to_12": 885522000, "limite_12_to_15": 2604474000},
-        "Construcción": {"limite_5_a_7": 223489000, "limite_7_a_8": 354120000, "limite_8_to_12": 1142320000, "limite_12_to_15": 3359767000}
+        "link_ordenanza": "https://im.sanmartin.gov.ar/normativa/?_gl=1*v19aqv*_ga*MTY5NzkxNzc5OC4xNzIzMDMxNTYw*_ga_53LXLVYKXM*czE3ODA2Njc1MzkkbzM3JGcxJHQxNzgwNjY3NTY2JGozMyRsMCRoMA..",  # <-- Reemplazar por el link de la de 2025
+        "sectores": {
+            "Agropecuario": {"limite_5_a_7": 188939000, "limite_7_a_8": 284118000, "limite_8_to_12": 916506000, "limite_12_to_15": 2695609000},
+            "Industria y Minería": {"limite_5_a_7": 558602000, "limite_7_a_8": 840003000, "limite_8_to_12": 2709687000, "limite_12_to_15": 7969664000},
+            "Comercio": {"limite_5_a_7": 745715000, "limite_7_a_8": 1121376000, "limite_8_to_12": 3617338000, "limite_12_to_15": 10639232000},
+            "Servicios": {"limite_5_a_7": 182550000, "limite_7_a_8": 274512000, "limite_8_to_12": 885522000, "limite_12_to_15": 2604474000},
+            "Construcción": {"limite_5_a_7": 223489000, "limite_7_a_8": 354120000, "limite_8_to_12": 1142320000, "limite_12_to_15": 3359767000}
+        }
     }
 }
 
@@ -39,7 +46,7 @@ def evaluar_contribuyente(anio, sector, ingresos):
     if anio not in escalas_por_anio:
         return "Año No Válido", 0
     
-    escalas_anio = escalas_por_anio[anio]
+    escalas_anio = escalas_por_anio[anio]["sectores"]
     if sector not in escalas_anio:
         return "Sector No Válido", 0
     
@@ -72,7 +79,7 @@ with tab1:
     
     col1, col2 = st.columns(2)
     with col1:
-        sector_sel = st.selectbox("Seleccione el Sector de Actividad:", list(escalas_por_anio[anio_sel].keys()))
+        sector_sel = st.selectbox("Seleccione el Sector de Actividad:", list(escalas_por_anio[anio_sel]["sectores"].keys()))
     with col2:
         ingresos_num = st.number_input("Ingrese los Ingresos Brutos Anuales ($):", min_value=0.0, step=10000.0, format="%.2f")
         
@@ -81,13 +88,19 @@ with tab1:
         st.success(f"**Resultado {anio_sel}:** Categoría: **{cat}** | Alícuota Asignada: **{alic} ‰**")
         
         # Panel informativo dinámico según el año seleccionado
-        t = escalas_por_anio[anio_sel][sector_sel]
+        t = escalas_por_anio[anio_sel]["sectores"][sector_sel]
+        url_ordenanza = escalas_por_anio[anio_sel]["link_ordenanza"]
+        
         st.info(f"Rangos aplicados para {sector_sel} en el período {anio_sel}:\n"
                 f"- Menos de ${t['limite_5_a_7']:,} ➡️ 5‰ (Pequeño)\n"
                 f"- Desde ${t['limite_5_a_7']:,} hasta ${t['limite_7_a_8']-1:,} ➡️ 7‰ (Pequeño)\n"
                 f"- Desde ${t['limite_7_a_8']:,} hasta ${t['limite_8_to_12']-1:,} ➡️ 8‰ (Mediano)\n"
                 f"- Desde ${t['limite_8_to_12']:,} hasta ${t['limite_12_to_15']-1:,} ➡️ 12‰ (Grande)\n"
                 f"- ${t['limite_12_to_15']:,} o más ➡️ 15‰ (Grande)")
+        
+        # COMENTARIO Y BOTÓN DE ENLACE DIRECTO A LA ORDENANZA
+        st.markdown(f"ℹ️ *¿Querés verificar la normativa legal? Podés consultar el texto oficial de la ordenanza fiscal vigente para el año {anio_sel} haciendo clic abajo:*")
+        st.link_button(f"🔗 Ver Ordenanza Impositiva Oficial {anio_sel}", url_ordenanza)
 
 with tab2:
     st.header(f"Control de Inconsistencias Masivo ({anio_sel})")
@@ -106,7 +119,6 @@ with tab2:
             col_ing = st.selectbox("Seleccioná la columna de INGRESOS/EMISIÓN:", columnas)
             
             if st.button("Procesar y Buscar Inconsistencias"):
-                # Se pasa el anio_sel seleccionado globalmente
                 resultados = df.apply(lambda r: evaluar_contribuyente(anio_sel, r[col_sec], r[col_ing]), axis=1)
                 
                 df['Año_Fiscal_Auditado'] = anio_sel
