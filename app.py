@@ -13,9 +13,7 @@ try:
 except:
     st.subheader("Municipalidad de General San Martín")
 
-st.title("📊 Calculadora de Alícuotas e Inconsistencias Fiscales")
-st.markdown("Herramienta interna para la Dirección de Inteligencia Fiscal")
-st.markdown("---")
+st.title("📊 Calculadora de Alícuotas")
 
 # 1. ESTRUCTURA DE ESCALAS POR AÑO FISCAL (2025 y 2026 Corregidas)
 escalas_por_anio = {
@@ -58,7 +56,7 @@ def evaluar_contribuyente(anio, sector, ingresos):
         return "Grande", 15
 
 # Pestañas de la aplicación
-tab1, tab2 = st.tabs(["🧮 Calculadora Individual", "📂 Procesamiento Masivo (Excel)"])
+tab1, tab2 = st.tabs(["🧮 Calculadora Individual", "📂 Calculadora Masiva (Excel)"])
 
 with tab1:
     st.header("Consulta Individual de Contribuyente")
@@ -71,7 +69,7 @@ with tab1:
     with col_b:
         sector_sel = st.selectbox("Seleccione el Sector de Actividad:", list(escalas_por_anio[anio_ind].keys()))
     with col_c:
-        ingresos_num = st.number_input("Ingresos Brutos Anuales ($):", min_value=0.0, step=10000.0, format="%.2f")
+        ingresos_num = st.number_input("Total ingresos gravados, no gravados y exentos del periodo fiscal anterior ($):", min_value=0.0, step=10000.0, format="%.2f")
         
     if st.button("Calcular Alícuota", type="primary"):
         cat, alic = evaluar_contribuyente(anio_ind, sector_sel, ingresos_num)
