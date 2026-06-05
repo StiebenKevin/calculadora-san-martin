@@ -101,9 +101,9 @@ with tab2:
             # Columnas de mapeo y selección de año lado a lado
             col_x, col_y, col_z = st.columns(3)
             with col_x:
-                col_sec = st.selectbox("Columna SECTOR:", columnas)
+                col_sec = st.selectbox("SECTOR:", columnas)
             with col_y:
-                col_ing = st.selectbox("Columna INGRESOS:", columnas)
+                col_ing = st.selectbox("INGRESOS:", columnas)
             with col_z:
                 anio_mas = st.selectbox("📅 Año Fiscal a Auditar:", [2026, 2025], key="anio_masivo")
             
@@ -111,7 +111,7 @@ with tab2:
                 # Realizar el cálculo matemático
                 resultados = df.apply(lambda r: evaluar_contribuyente(anio_mas, r[col_sec], r[col_ing]), axis=1)
                 
-                df['Año'] = anio_mas
+                df['AÑO'] = anio_mas
                 df['Tamaño'] = [res[0] for res in resultados]
                 df['Alícuota'] = [res[1] for res in resultados]
                 
