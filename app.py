@@ -101,9 +101,9 @@ with tab2:
             # Columnas de mapeo y selección de año lado a lado
             col_x, col_y, col_z = st.columns(3)
             with col_x:
-                col_sec = st.selectbox("Columna SECTOR / ACTIVIDAD:", columnas)
+                col_sec = st.selectbox("Columna ACTIVIDAD:", columnas)
             with col_y:
-                col_ing = st.selectbox("Columna INGRESOS / EMISIÓN:", columnas)
+                col_ing = st.selectbox("Columna INGRESOS:", columnas)
             with col_z:
                 anio_mas = st.selectbox("📅 Año Fiscal a Auditar:", [2026, 2025], key="anio_masivo")
             
@@ -123,7 +123,7 @@ with tab2:
                 processed_data = output.getvalue()
                 
                 st.download_button(
-                    label=f"📥 Descargar Excel Controlado {anio_mas}",
+                    label=f"📥 Descargar Excel Para Control {anio_mas}",
                     data=processed_data,
                     file_name=f"control_fiscal_{anio_mas}.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
