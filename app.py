@@ -67,7 +67,7 @@ with tab1:
     with col_a:
         anio_ind = st.selectbox("📅 Período:", [2026, 2025], key="anio_individual")
     with col_b:
-        sector_sel = st.selectbox("Seleccione el Sector de Actividad:", list(escalas_por_anio[anio_ind].keys()))
+        sector_sel = st.selectbox("Seleccione la actividad:", list(escalas_por_anio[anio_ind].keys()))
     with col_c:
         ingresos_num = st.number_input("Total ingresos gravados, no gravados y exentos del periodo fiscal anterior ($):", min_value=0.0, step=10000.0, format="%.2f")
         
@@ -85,8 +85,8 @@ with tab1:
                 f"- ${t['limite_12_to_15']:,} o más ➡️ 15‰ (Grande)")
 
 with tab2:
-    st.header("Control de Inconsistencias Masivo")
-    st.markdown("Subí el Excel con el padrón para cruzar los datos y calcular diferencias automáticamente.")
+    st.header("Control de alicuotas masivo")
+    st.markdown("Subír el Excel con el padrón para cruzar los datos y calcular diferencias automáticamente.")
     
     archivo = st.file_uploader("Cargar archivo Excel (.xlsx)", type=["xlsx"])
     
