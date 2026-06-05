@@ -13,27 +13,25 @@ try:
 except:
     st.subheader("Municipalidad de General San Martín")
 
-st.title("📊 Calculadora de Alícuotas")
+st.title("📊 Calculadora de Alícuotas e Inconsistencias Fiscales")
+st.markdown("Herramienta interna para la Dirección de Inteligencia Fiscal")
+st.markdown("---")
 
-# 1. ESTRUCTURA DE ESCALAS Y LINKS POR AÑO FISCAL
+# 1. ESTRUCTURA DE ESCALAS POR AÑO FISCAL (2025 y 2026 Corregidas)
 escalas_por_anio = {
     2026: {
-        "sectores": {
-            "Agropecuario": {"limite_5_a_7": 244789000, "limite_7_a_8": 368103000, "limite_8_to_12": 1187425000, "limite_12_to_15": 3492431000},
-            "Industria y Minería": {"limite_5_a_7": 723725000, "limite_7_a_8": 1088308000, "limite_8_to_12": 3510670000, "limite_12_to_15": 10325497000},
-            "Comercio": {"limite_5_a_7": 966148000, "limite_7_a_8": 1453321000, "limite_8_to_12": 4686623000, "limite_12_to_15": 13784189000},
-            "Servicios": {"limite_5_a_7": 236512000, "limite_7_a_8": 355658000, "limite_8_to_12": 1147282000, "limite_12_to_15": 3374357000},
-            "Construcción": {"limite_5_a_7": 289552000, "limite_7_a_8": 458798000, "limite_8_to_12": 1479990000, "limite_12_to_15": 4352914000}
-        }
+        "Agropecuario": {"limite_5_a_7": 244789000, "limite_7_a_8": 368103000, "limite_8_to_12": 1187425000, "limite_12_to_15": 3492431000},
+        "Industria y Minería": {"limite_5_a_7": 723725000, "limite_7_a_8": 1088308000, "limite_8_to_12": 3510670000, "limite_12_to_15": 10325497000},
+        "Comercio": {"limite_5_a_7": 966148000, "limite_7_a_8": 1453321000, "limite_8_to_12": 4686623000, "limite_12_to_15": 13784189000},
+        "Servicios": {"limite_5_a_7": 236512000, "limite_7_a_8": 355658000, "limite_8_to_12": 1147282000, "limite_12_to_15": 3374357000},
+        "Construcción": {"limite_5_a_7": 289552000, "limite_7_a_8": 458798000, "limite_8_to_12": 1479990000, "limite_12_to_15": 4352914000}
     },
     2025: {
-        "sectores": {
-            "Agropecuario": {"limite_5_a_7": 188939000, "limite_7_a_8": 284118000, "limite_8_to_12": 916506000, "limite_12_to_15": 2695609000},
-            "Industria y Minería": {"limite_5_a_7": 558602000, "limite_7_a_8": 840003000, "limite_8_to_12": 2709687000, "limite_12_to_15": 7969664000},
-            "Comercio": {"limite_5_a_7": 745715000, "limite_7_a_8": 1121376000, "limite_8_to_12": 3617338000, "limite_12_to_15": 10639232000},
-            "Servicios": {"limite_5_a_7": 182550000, "limite_7_a_8": 274512000, "limite_8_to_12": 885522000, "limite_12_to_15": 2604474000},
-            "Construcción": {"limite_5_a_7": 223489000, "limite_7_a_8": 354120000, "limite_8_to_12": 1142320000, "limite_12_to_15": 3359767000}
-        }
+        "Agropecuario": {"limite_5_a_7": 188939000, "limite_7_a_8": 284118000, "limite_8_to_12": 916506000, "limite_12_to_15": 2695609000},
+        "Industria y Minería": {"limite_5_a_7": 558602000, "limite_7_a_8": 840003000, "limite_8_to_12": 2709687000, "limite_12_to_15": 7969664000},
+        "Comercio": {"limite_5_a_7": 745715000, "limite_7_a_8": 1121376000, "limite_8_to_12": 3617338000, "limite_12_to_15": 10639232000},
+        "Servicios": {"limite_5_a_7": 182550000, "limite_7_a_8": 274512000, "limite_8_to_12": 885522000, "limite_12_to_15": 2604474000},
+        "Construcción": {"limite_5_a_7": 223489000, "limite_7_a_8": 354120000, "limite_8_to_12": 1142320000, "limite_12_to_15": 3359767000}
     }
 }
 
@@ -42,7 +40,7 @@ def evaluar_contribuyente(anio, sector, ingresos):
     if anio not in escalas_por_anio:
         return "Año No Válido", 0
     
-    escalas_anio = escalas_por_anio[anio]["sectores"]
+    escalas_anio = escalas_por_anio[anio]
     if sector not in escalas_anio:
         return "Sector No Válido", 0
     
@@ -60,38 +58,33 @@ def evaluar_contribuyente(anio, sector, ingresos):
         return "Grande", 15
 
 # Pestañas de la aplicación
-tab1, tab2 = st.tabs(["🧮 Calculadora Individual", "📂 Calculadora Masiva (Excel)"])
+tab1, tab2 = st.tabs(["🧮 Calculadora Individual", "📂 Procesamiento Masivo (Excel)"])
 
 with tab1:
     st.header("Consulta Individual de Contribuyente")
     
-    # Diseño en 3 columnas en la misma fila
+    # Diseño horizontal en la misma fila
     col_a, col_b, col_c = st.columns([1, 2, 2])
     
     with col_a:
         anio_ind = st.selectbox("📅 Período:", [2026, 2025], key="anio_individual")
     with col_b:
-        sector_sel = st.selectbox("Seleccione la actividad:", list(escalas_por_anio[anio_ind]["sectores"].keys()))
+        sector_sel = st.selectbox("Seleccione el Sector de Actividad:", list(escalas_por_anio[anio_ind].keys()))
     with col_c:
-        ingresos_num = st.number_input("Total ingresos gravados, no gravados y exentos del periodo fiscal anterior  ($):", min_value=0.0, step=10000.0, format="%.2f")
+        ingresos_num = st.number_input("Ingresos Brutos Anuales ($):", min_value=0.0, step=10000.0, format="%.2f")
         
     if st.button("Calcular Alícuota", type="primary"):
         cat, alic = evaluar_contribuyente(anio_ind, sector_sel, ingresos_num)
         st.success(f"**Resultado {anio_ind}:** Categoría: **{cat}** | Alícuota Asignada: **{alic} ‰**")
         
         # Panel informativo
-        t = escalas_por_anio[anio_ind]["sectores"][sector_sel]
-        url_ordenanza = escalas_por_anio[anio_ind]["link_ordenanza"]
-        
+        t = escalas_por_anio[anio_ind][sector_sel]
         st.info(f"Rangos aplicados para {sector_sel} en el período {anio_ind}:\n"
                 f"- Menos de ${t['limite_5_a_7']:,} ➡️ 5‰ (Pequeño)\n"
                 f"- Desde ${t['limite_5_a_7']:,} hasta ${t['limite_7_a_8']-1:,} ➡️ 7‰ (Pequeño)\n"
                 f"- Desde ${t['limite_7_a_8']:,} hasta ${t['limite_8_to_12']-1:,} ➡️ 8‰ (Mediano)\n"
                 f"- Desde ${t['limite_8_to_12']:,} hasta ${t['limite_12_to_15']-1:,} ➡️ 12‰ (Grande)\n"
                 f"- ${t['limite_12_to_15']:,} o más ➡️ 15‰ (Grande)")
-        
-        st.markdown(f"ℹ️ *¿Querés verificar la normativa legal? Podés consultar el texto oficial de la ordenanza fiscal vigente para el año {anio_ind} haciendo clic abajo:*")
-        st.link_button(f"🔗 Ver Ordenanza Impositiva Oficial {anio_ind}", url_ordenanza)
 
 with tab2:
     st.header("Control de Inconsistencias Masivo")
@@ -112,7 +105,7 @@ with tab2:
             with col_x:
                 col_sec = st.selectbox("Columna SECTOR / ACTIVIDAD:", columnas)
             with col_y:
-                col_inv = st.selectbox("Columna INGRESOS / EMISIÓN:", columnas)
+                col_ing = st.selectbox("Columna INGRESOS / EMISIÓN:", columnas)
             with col_z:
                 anio_mas = st.selectbox("📅 Año Fiscal a Auditar:", [2026, 2025], key="anio_masivo")
             
