@@ -13,8 +13,7 @@ try:
 except:
     st.subheader("Municipalidad de General San Martín")
 
-st.title("📊 Calculadora de Alícuotas e Inconsistencias Fiscales")
-st.markdown("Herramienta interna para la Dirección de Inteligencia Fiscal")
+st.title("📊 Calculadora de Alícuotas")
 
 # 1. ESTRUCTURA DE ESCALAS POR AÑO FISCAL (2025 y 2026 Corregidas)
 escalas_por_anio = {
@@ -59,22 +58,22 @@ def evaluar_contribuyente(anio, sector, ingresos):
 # 3. SELECTOR DE AÑO GLOBAL
 col_anio, _ = st.columns([1, 2])
 with col_anio:
-    anio_sel = st.selectbox("📅 Seleccione el Año Fiscal a auditar:", [2026, 2025])
+    anio_sel = st.selectbox("📅 Seleccione el Año de la Ordenanza:", [2026, 2025])
 
 st.write(f"Trabajando con la ordenanza impositiva del período: **{anio_sel}**")
 st.markdown("---")
 
 # Pestañas de la aplicación
-tab1, tab2 = st.tabs(["🧮 Calculadora Individual", "📂 Procesamiento Masivo (Excel)"])
+tab1, tab2 = st.tabs(["🧮 Calculadora Individual", "📂 Calculadora Masiva (Excel)"])
 
 with tab1:
     st.header(f"Consulta Individual ({anio_sel})")
     
     col1, col2 = st.columns(2)
     with col1:
-        sector_sel = st.selectbox("Seleccione el Sector de Actividad:", list(escalas_por_anio[anio_sel].keys()))
+        sector_sel = st.selectbox("Seleccione la actividad:", list(escalas_por_anio[anio_sel].keys()))
     with col2:
-        ingresos_num = st.number_input("Ingrese los Ingresos Brutos Anuales ($):", min_value=0.0, step=10000.0, format="%.2f")
+        ingresos_num = st.number_input("Ingrese los Ingresos Brutos Anuales del periodo fiscal anterior ($):", min_value=0.0, step=10000.0, format="%.2f")
         
     if st.button("Calcular Alícuota"):
         cat, alic = evaluar_contribuyente(anio_sel, sector_sel, ingresos_num)
@@ -98,14 +97,14 @@ with tab2:
     if archivo is not None:
         try:
             df = pd.read_excel(archivo)
-            st.write("📋 Vista previa de los datos cargados:")
+            st.write("📋 Vista previa")
             st.dataframe(df.head(5))
             
             columnas = df.columns.tolist()
-            col_sec = st.selectbox("Seleccioná la columna de SECTOR/ACTIVIDAD:", columnas)
-            col_ing = st.selectbox("Seleccioná la columna de INGRESOS/EMISIÓN:", columnas)
+            col_sec = st.selectbox("Seleccioná la columna de ACTIVIDAD:", columnas)
+            col_ing = st.selectbox("Seleccioná la columna de INGRESOS:", columnas)
             
-            if st.button("Procesar y Buscar Inconsistencias"):
+            if st.button("Procesar y Buscar"):
                 # Se pasa el anio_sel seleccionado globalmente
                 resultados = df.apply(lambda r: evaluar_contribuyente(anio_sel, r[col_sec], r[col_ing]), axis=1)
                 
