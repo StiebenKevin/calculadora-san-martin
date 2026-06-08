@@ -102,42 +102,115 @@ with tab1:
         empleados_num = st.number_input("👥 Empleados:", min_value=0, step=1, value=1)
         
     if st.button("Calcular Alícuota y Mínimos", type="primary"):
-        # Cálculos mecánicos
+        # 1. Cálculos Mecánicos
         cat, alic = evaluar_contribuyente(anio_ind, sector_sel, ingresos_num)
         modulos, impuesto_minimo = calcular_minimo_empleados(empleados_num)
-        
-        # El impuesto por ingresos brutos tradicional (Ingresos * Alícuota / 1000)
         impuesto_por_alicuota = (ingresos_num * alic) / 1000
-        
-        # El monto final exigible es el MAYOR entre el mínimo y la alícuota
         monto_final = max(impuesto_por_alicuota, impuesto_minimo)
         
-        st.success(f"**Resultado {anio_ind}:** Categoría: **{cat}** | Alícuota Asignada: **{alic} ‰**")
+        st.markdown("---")
         
-        # Panel visual con el desglose individual
+        # 2. Encabezado de Resultado Destacado (Estilo Tarjeta Oficial)
+        st.markdown(
+            f"""
+            <div style="background-color: #f0f4f8; padding: 20px; border-radius: 10px; border-left: 6px solid #1f77b4; margin-bottom: 20px;">
+                <h4 style="margin: 0; color: #1e3d59; font-size: 18px;">📋 Veredicto de Auditoría — Período {anio_ind}</h4>
+                <p style="margin: 8px 0 0 0; font-size: 22px; color: #12232e;">
+                    Contribuyente <b>{cat.upper()}</b> — Alícuota Asignada: <span style="color: #1f77b4; font-weight: bold;">{alic} ‰</span>
+                </p>
+            </div>
+            """, 
+            unsafe_allow_html=True
+        )
+        
+        # 3. Métricas Financieras en 3 Columnas Limpias
         col_res1, col_res2, col_res3 = st.columns(3)
         with col_res1:
             st.metric(label="Tasa por Alícuota (Ingresos)", value=f"$ {impuesto_por_alicuota:,.2f}")
         with col_res2:
-            st.metric(label="Mínimo por Empleados", value=f"{modulos} MF", delta=f"$ {impuesto_minimo:,.2f}", delta_color="off")
+            st.metric(label="Mínimo por Dotación de Personal", value=f"$ {impuesto_minimo:,.2f}", delta=f"{modulos} MF", delta_color="off")
         with col_res3:
-            st.warning(f"**Monto Determinado: $ {monto_final:,.2f}**")
+            st.metric(label="⚡ MONTO DETERMINADO FINAL", value=f"$ {monto_final:,.2f}")
             
-        # Machete informativo de rangos de ingresos
-        t = escalas_por_anio[anio_ind][sector_sel]
-        st.info(f"📋 **Rangos de Alícuotas aplicados para {sector_sel} en el período {anio_ind}:**\n"
-                f"- Menos de ${t['limite_5_a_7']:,} ➡️ 5‰ (Pequeño)\n"
-                f"- Desde ${t['limite_5_a_7']:,} hasta ${t['limite_7_a_8']-1:,} ➡️ 7‰ (Pequeño)\n"
-                f"- Desde ${t['limite_7_a_8']:,} hasta ${t['limite_8_to_12']-1:,} ➡️ 8‰ (Mediano)\n"
-                f"- Desde ${t['limite_8_to_12']:,} hasta ${t['limite_12_to_15']-1:,} ➡️ 12‰ (Grande)\n"
-                f"- ${t['limite_12_to_15']:,} o más ➡️ 15‰ (Grande)")
+        st.markdown("### 🔍 Cuadros de Referencia Fiscal")
         
-        # Machete informativo de mínimos por empleados
-        st.info(f"👥 **Mínimos Generales (Valor del Módulo Fiscal: ${VALOR_MODULO}):**\n"
-                f"- 1 Empleado ➡️ 170 MF (**$ 15,130.00**)\n"
-                f"- 2 Empleados ➡️ 260 MF (**$ 23,140.00**)\n"
-                f"- 3 Empleados ➡️ 350 MF (**$ 31,150.00**)\n"
-                f"- 4 o más Empleados ➡️ 350 MF + 100 MF por cada empleado adicional (**$ 31,150.00 + $ 8,900.00 c/u**)")
+        # 4. Paneles de Referencia Dinámicos en Paralelo (Tablas en vez de listas)
+        col_tab_a, col_tab_b = st.columns(2)
+        
+        with col_tab_a:
+            t = escalas_por_anio[anio_ind][sector_sel]
+            st.markdown(f"**Escala de Alícuotas {anio_ind}: {sector_sel}**")
+            
+            # Matriz armada dinámicamente como tabla HTML limpia
+            tabla_escalas_html = f"""
+            <table style="width:100%; border-collapse: collapse; margin-top: 10px; font-size: 14px;">
+                <tr style="background-color: #1e3d59; color: white; text-align: left;">
+                    <th style="padding: 8px; border: 1px solid #ddd;">Rango de Ingresos Brutos Anuales</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Alícuota</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Segmento</th>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;">Menos de ${t['limite_5_a_7']:,}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold;">5 ‰</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; color: #2d7f5e;">Pequeño</td>
+                </tr>
+                <tr style="background-color: #f9f9f9;">
+                    <td style="padding: 8px; border: 1px solid #ddd;">Desde ${t['limite_5_a_7']:,} hasta ${t['limite_7_a_8']-1:,}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold;">7 ‰</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; color: #2d7f5e;">Pequeño</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;">Desde ${t['limite_7_a_8']:,} hasta ${t['limite_8_to_12']-1:,}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold;">8 ‰</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; color: #b7791f;">Mediano</td>
+                </tr>
+                <tr style="background-color: #f9f9f9;">
+                    <td style="padding: 8px; border: 1px solid #ddd;">Desde ${t['limite_8_to_12']:,} hasta ${t['limite_12_to_15']-1:,}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold;">12 ‰</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; color: #c53030;">Grande</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${t['limite_12_to_15']:,} o más</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold;">15 ‰</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; color: #c53030;">Grande</td>
+                </tr>
+            </table>
+            """
+            st.markdown(tabla_escalas_html, unsafe_allow_html=True)
+            
+        with col_tab_b:
+            st.markdown(f"**Mínimos Generales por Personal (Módulo Fiscal: ${VALOR_MODULO})**")
+            
+            tabla_minimos_html = f"""
+            <table style="width:100%; border-collapse: collapse; margin-top: 10px; font-size: 14px;">
+                <tr style="background-color: #2b2d42; color: white; text-align: left;">
+                    <th style="padding: 8px; border: 1px solid #ddd;">Dotación de Personal</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Módulos (MF)</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Importe en Pesos</th>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;">1 Empleado</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">170 MF</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: right; font-weight: bold;">$ 15,130.00</td>
+                </tr>
+                <tr style="background-color: #f9f9f9;">
+                    <td style="padding: 8px; border: 1px solid #ddd;">2 Empleados</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">260 MF</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: right; font-weight: bold;">$ 23,140.00</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;">3 Empleados</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">350 MF</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: right; font-weight: bold;">$ 31,150.00</td>
+                </tr>
+                <tr style="background-color: #f9f9f9;">
+                    <td style="padding: 8px; border: 1px solid #ddd;">4 o más Empleados</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">350 + 100 por adicional</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: right; color: #4a5568; font-size: 13px;">$ 31,150.00 + $ 8,900.00 c/u</td>
+                </tr>
+            </table>
+            """
+            st.markdown(tabla_minimos_html, unsafe_allow_html=True)
 
 with tab2:
     st.header("Control de Inconsistencias Masivo")
