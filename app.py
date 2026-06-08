@@ -51,7 +51,7 @@ def obtener_valor_modulo_real(anio, mes):
             
     return 89.00  # Valor por defecto seguro
 
-# 2. ESTRUCTURA DE ESCALAS POR AÑO FISCAL (ESTRUCTURA ORIGINAL RE-ESTABLECIDA)
+# 2. ESTRUCTURA DE ESCALAS POR AÑO FISCAL
 escalas_por_anio = {
     2026: {
         "Agropecuario": {"limite_5_a_7": 244789000, "limite_7_a_8": 368103000, "limite_8_to_12": 1187425000, "limite_12_to_15": 3492431000},
@@ -144,10 +144,10 @@ with tab1:
         
         st.markdown(
             f"""
-            <div style="background-color: #f0f4f8; padding: 20px; border-radius: 10px; border-left: 6px solid #1f77b4; margin-bottom: 20px;">
+            <div style="background-color: #f0f4f8; padding: 20px; border-radius: 10px; border-left: 6px solid #1e3d59; margin-bottom: 20px;">
                 <h4 style="margin: 0; color: #1e3d59; font-size: 18px;">📋 Veredicto de Auditoría — Período {NOMBRES_MESES[mes_ind]} / {anio_ind}</h4>
                 <p style="margin: 8px 0 0 0; font-size: 22px; color: #12232e;">
-                    Contribuyente <b>{cat.upper()}</b> — Alícuota Asignada: <span style="color: #1f77b4; font-weight: bold;">{alic} ‰</span>
+                    Contribuyente <b>{cat.upper()}</b> — Alícuota Asignada: <span style="color: #1e3d59; font-weight: bold;">{alic} ‰</span>
                 </p>
             </div>
             """, 
@@ -169,6 +169,7 @@ with tab1:
             t = escalas_por_anio[anio_ind][sector_sel]
             st.markdown(f"**Escala de Alícuotas {anio_ind}: {sector_sel}**")
             
+            # Encabezado unificado en azul fuerte #1e3d59
             tabla_escalas_html = f"""
             <table style="width:100%; border-collapse: collapse; margin-top: 10px; font-size: 14px;">
                 <tr style="background-color: #1e3d59; color: white; text-align: left;">
@@ -209,9 +210,10 @@ with tab1:
             mod_actual = obtener_valor_modulo_real(anio_ind, mes_ind)
             st.markdown(f"**Mínimos (Módulo Fiscal {NOMBRES_MESES[mes_ind]} {anio_ind}: ${mod_actual:.2f})**")
             
+            # Encabezado unificado exactamente con el mismo azul fuerte #1e3d59
             tabla_minimos_html = f"""
             <table style="width:100%; border-collapse: collapse; margin-top: 10px; font-size: 14px;">
-                <tr style="background-color: #2b2d42; color: white; text-align: left;">
+                <tr style="background-color: #1e3d59; color: white; text-align: left;">
                     <th style="padding: 8px; border: 1px solid #ddd;">Dotación de Personal</th>
                     <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Módulos (MF)</th>
                     <th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Importe en Pesos</th>
