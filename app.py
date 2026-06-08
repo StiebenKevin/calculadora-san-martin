@@ -1,8 +1,3 @@
-¡Mala mía! Te incluí el título con el emoji de la nota (📝 Código Integral (app.py)) dentro del bloque de código y Python intentó leer eso como si fuera parte del programa, tirándote ese SyntaxError.
-
-Acá tenés el código limpio, empezando estrictamente desde el primer import, para que lo puedas copiar y pegar completo sin que salte ningún error de sintaxis:
-
-Python
 import streamlit as st
 import pandas as pd
 from PIL import Image
