@@ -169,7 +169,6 @@ with tab1:
             t = escalas_por_anio[anio_ind][sector_sel]
             st.markdown(f"**Escala de Alícuotas {anio_ind}: {sector_sel}**")
             
-            # Encabezado unificado en azul fuerte #1e3d59
             tabla_escalas_html = f"""
             <table style="width:100%; border-collapse: collapse; margin-top: 10px; font-size: 14px;">
                 <tr style="background-color: #1e3d59; color: white; text-align: left;">
@@ -210,7 +209,6 @@ with tab1:
             mod_actual = obtener_valor_modulo_real(anio_ind, mes_ind)
             st.markdown(f"**Mínimos (Módulo Fiscal {NOMBRES_MESES[mes_ind]} {anio_ind}: ${mod_actual:.2f})**")
             
-            # Encabezado unificado exactamente con el mismo azul fuerte #1e3d59
             tabla_minimos_html = f"""
             <table style="width:100%; border-collapse: collapse; margin-top: 10px; font-size: 14px;">
                 <tr style="background-color: #1e3d59; color: white; text-align: left;">
@@ -244,7 +242,7 @@ with tab1:
 
 with tab2:
     st.header("Control de Inconsistencias Masivo")
-    st.markdown("Subí el Excel con el padrón para cruzar los datos y calcular diferencias automáticamente.")
+    st.markdown("Subí el Excel con el padrón en el área central. Luego, configurá los campos en la **barra lateral izquierda**.")
     
     archivo = st.file_uploader("Cargar archivo Excel (.xlsx)", type=["xlsx"])
     
@@ -252,23 +250,22 @@ with tab2:
         try:
             df = pd.read_excel(archivo)
             st.write("📋 Vista previa de los datos cargados:")
-            st.dataframe(df.head(3))
+            st.dataframe(df.head(3), use_container_width=True)
             
             columnas = df.columns.tolist()
             
-            col_x, col_y, col_w, col_z1, col_z2 = st.columns(5)
-            with col_x:
-                col_sec = st.selectbox("Columna SECTOR / ACTIVIDAD:", columnas)
-            with col_y:
-                col_ing = st.selectbox("Columna INGRESOS / EMISIÓN:", columnas)
-            with col_w:
-                col_emp = st.selectbox("Columna CANTIDAD EMPLEADOS:", columnas)
-            with col_z1:
-                anio_mas = st.selectbox("📅 Año Fiscal:", [2026, 2025, 2024], key="anio_masivo")
-            with col_z2:
-                mes_mas = st.selectbox("📆 Mes Fiscal:", list(NOMBRES_MESES.keys()), format_func=lambda x: NOMBRES_MESES[x], key="mes_masivo")
+            # PASO 1: SECTORES Y SELECTORES LLEVADOS EXCLUSIVAMENTE AL SIDEBAR
+            st.sidebar.markdown("### ⚙️ Configuración del Padrón")
+            col_sec = st.sidebar.selectbox("Columna SECTOR / ACTIVIDAD:", columnas)
+            col_ing = st.sidebar.selectbox("Columna INGRESOS / EMISIÓN:", columnas)
+            col_emp = st.sidebar.selectbox("Columna CANTIDAD EMPLEADOS:", columnas)
             
-            if st.button("Procesar y Buscar Inconsistencias", type="primary"):
+            st.sidebar.markdown("### 📅 Período Normativo")
+            anio_mas = st.sidebar.selectbox("📅 Año Fiscal:", [2026, 2025, 2024], key="anio_masivo")
+            mes_mas = st.sidebar.selectbox("📆 Mes Fiscal:", list(NOMBRES_MESES.keys()), format_func=lambda x: NOMBRES_MESES[x], key="mes_masivo")
+            
+            # Botón de ejecución en el sidebar para liberar espacio en pantalla principal
+            if st.sidebar.button("Procesar y Buscar Inconsistencias", type="primary", use_container_width=True):
                 res_alicuotas = df.apply(lambda r: evaluar_contribuyente(anio_mas, r[col_sec], r[col_ing]), axis=1)
                 
                 df['Año_Fiscal_Auditado'] = anio_mas
@@ -286,7 +283,7 @@ with tab2:
                 
                 st.success(f"¡Procesamiento masivo completado para {NOMBRES_MESES[mes_mas]} / {anio_mas}!")
                 
-                st.dataframe(df, column_config={
+                st.dataframe(df, use_container_width=True, column_config={
                     col_ing: st.column_config.NumberColumn(col_ing, format="$ %.2f"),
                     'Valor_Módulo_Aplicado': st.column_config.NumberColumn('Módulo ($)', format="$ %.2f"),
                     'Impuesto_por_Ingresos_$': st.column_config.NumberColumn('Impuesto por Ingresos', format="$ %.2f"),
