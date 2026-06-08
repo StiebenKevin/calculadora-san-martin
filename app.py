@@ -126,11 +126,11 @@ with tab1:
         # 3. Métricas Financieras en 3 Columns Limpias
         col_res1, col_res2, col_res3 = st.columns(3)
         with col_res1:
-            st.metric(label="Tasa por Alícuota (Ingresos)", value=f"$ {impuesto_por_alicuota:,.2f}")
+            st.metric(label="Tasa por segun ingresos y alicuota", value=f"$ {impuesto_por_alicuota:,.2f}")
         with col_res2:
-            st.metric(label="Mínimo por Dotación de Personal", value=f"$ {impuesto_minimo:,.2f}", delta=f"{modulos} MF", delta_color="off")
+            st.metric(label="Mínimo por Empleado", value=f"$ {impuesto_minimo:,.2f}", delta=f"{modulos} MF", delta_color="off")
         with col_res3:
-            st.metric(label="⚡ MONTO DETERMINADO FINAL", value=f"$ {monto_final:,.2f}")
+            st.metric(label="MONTO DETERMINADO", value=f"$ {monto_final:,.2f}")
             
         st.markdown("### 🔍 Cuadros de Referencia Fiscal")
         
