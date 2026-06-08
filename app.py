@@ -132,7 +132,7 @@ with tab1:
         with col_res3:
             st.metric(label="MONTO DETERMINADO", value=f"$ {monto_final:,.2f}")
             
-        st.markdown("####Cuadros de Referencia para control")
+        st.markdown("### 🔍Cuadros de Referencia para control")
         
         # 4. Paneles de Referencia Dinámicos en Paralelo (Tablas en vez de listas)
         col_tab_a, col_tab_b = st.columns(2)
