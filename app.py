@@ -123,7 +123,7 @@ with tab1:
             unsafe_allow_html=True
         )
         
-        # 3. Métricas Financieras en 3 Columnas Limpias
+        # 3. Métricas Financieras en 3 Columns Limpias
         col_res1, col_res2, col_res3 = st.columns(3)
         with col_res1:
             st.metric(label="Tasa por Alícuota (Ingresos)", value=f"$ {impuesto_por_alicuota:,.2f}")
@@ -206,7 +206,7 @@ with tab1:
                 <tr style="background-color: #f9f9f9;">
                     <td style="padding: 8px; border: 1px solid #ddd;">4 o más Empleados</td>
                     <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">350 + 100 por adicional</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: right; color: #4a5568; font-size: 13px;">$ 31,150.00 + $ 8,900.00 c/u</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: right; font-weight: bold;">$ 31,150.00 + $ 8,900.00 c/u</td>
                 </tr>
             </table>
             """
