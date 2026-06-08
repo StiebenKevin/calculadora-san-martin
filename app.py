@@ -83,7 +83,7 @@ tab1, tab2 = st.tabs(["🧮 Calculadora Individual", "📂 Procesamiento Masivo 
 with tab1:
     st.header("Consulta Individual de Contribuyente")
     
-    # Diseño horizontal expandido a 4 columnas
+    # Diseño horizontal en una misma fila (4 columnas)
     col_a, col_b, col_c, col_d = st.columns([1, 2, 2, 1])
     
     with col_a:
@@ -100,21 +100,20 @@ with tab1:
         cat, alic = evaluar_contribuyente(anio_ind, sector_sel, ingresos_num)
         modulos, impuesto_minimo = calcular_minimo_empleados(empleados_num)
         
-        # El impuesto por ingresos brutos tradicional (Ingresos * Alícuota por mil)
+        # El impuesto por ingresos brutos tradicional (Ingresos * Alícuota / 1000)
         impuesto_por_alicuota = (ingresos_num * alic) / 1000
         
-        # El monto final exigible es el mayor entre el mínimo por empleados y lo calculado por alícuota
+        # El monto final exigible es el MAYOR entre el mínimo y la alícuota
         monto_final = max(impuesto_por_alicuota, impuesto_minimo)
         
-        # Mostramos los resultados detallados
         st.success(f"**Resultado {anio_ind}:** Categoría: **{cat}** | Alícuota Asignada: **{alic} ‰**")
         
-        # Panel de desglose de importes
+        # Panel visual con el desglose individual
         col_res1, col_res2, col_res3 = st.columns(3)
         with col_res1:
             st.metric(label="Impuesto por Alícuota (Ingresos)", value=f"$ {impuesto_por_alicuota:,.2f}")
         with col_res2:
-            st.metric(label=f"Mínimo por Empleados ({modulos} MF)", value=f"$ {impuesto_minimo:,.2f}")
+            st.metric(label="Mínimo por Empleados", value=f"{modulos} MF", delta=f"$ {impuesto_minimo:,.2f}", delta_color="off")
         with col_res3:
             st.warning(f"**Monto Determinado: $ {monto_final:,.2f}**")
             
@@ -141,7 +140,7 @@ with tab2:
             
             columnas = df.columns.tolist()
             
-            # Columnas de mapeo ahora agregando la de empleados
+            # Columnas de mapeo (4 columnas alineadas)
             col_x, col_y, col_w, col_z = st.columns(4)
             with col_x:
                 col_sec = st.selectbox("Columna SECTOR / ACTIVIDAD:", columnas)
@@ -153,41 +152,41 @@ with tab2:
                 anio_mas = st.selectbox("📅 Año Fiscal a Auditar:", [2026, 2025], key="anio_masivo")
             
             if st.button("Procesar y Buscar Inconsistencias", type="primary"):
-                # 1. Calcular alícuotas e ingresos fila por fila
+                # 1. Calcular alícuotas e ingresos de siempre
                 res_alicuotas = df.apply(lambda r: evaluar_contribuyente(anio_mas, r[col_sec], r[col_ing]), axis=1)
                 
                 df['Año_Fiscal_Auditado'] = anio_mas
                 df['Categoría_Calculada'] = [res[0] for res in res_alicuotas]
                 df['Alícuota_Calculada_‰'] = [res[1] for res in res_alicuotas]
-                
-                # Impuesto calculado puramente por ingresos
                 df['Impuesto_por_Ingresos_$'] = (df[col_ing] * df['Alícuota_Calculada_‰']) / 1000
                 
-                # 2. Calcular los mínimos por empleados fila por fila
+                # 2. CONTROL COMPLETO EN EL MASIVO: Calcular módulos y pesos por cantidad de empleados
                 res_empleados = df[col_emp].apply(calcular_minimo_empleados)
-                df['Módulos_Fiscales'] = [res[0] for res in res_empleados]
-                df['Impuesto_Mínimo_Empleados_$'] = [res[1] for res in res_empleados]
+                df['Mínimo_Empleados_MF'] = [res[0] for res in res_empleados]
+                df['Mínimo_Empleados_$'] = [res[1] for res in res_empleados]
                 
-                # 3. Cruzar para ver cuál es el mayor (Monto Determinado Oficial)
-                df['Impuesto_Determinado_Oficial_$'] = df[['Impuesto_por_Ingresos_$', 'Impuesto_Mínimo_Empleados_$']].max(axis=1)
+                # 3. Cruzar ambos para determinar cuál es el mayor (Monto Determinado Oficial)
+                df['Impuesto_Determinado_Oficial_$'] = df[['Impuesto_por_Ingresos_$', 'Mínimo_Empleados_$']].max(axis=1)
                 
-                st.success(f"¡Procesamiento masivo completado! Se calcularon alícuotas e impuestos mínimos.")
+                st.success(f"¡Procesamiento masivo completado! Escala {anio_mas} con control de mínimos aplicada.")
                 
-                # Configuramos la vista para formatear todas las columnas monetarias con "$"
+                # Mostramos en pantalla formateando dinámicamente todas las columnas de dinero con el signo "$"
                 st.dataframe(df, column_config={
                     col_ing: st.column_config.NumberColumn(col_ing, format="$ %.2f"),
                     'Impuesto_por_Ingresos_$': st.column_config.NumberColumn('Impuesto por Ingresos', format="$ %.2f"),
-                    'Impuesto_Mínimo_Empleados_$': st.column_config.NumberColumn('Mínimo Empleados', format="$ %.2f"),
-                    'Impuesto_Determinado_Oficial_$': st.column_config.NumberColumn('Impuesto Determinado', format="$ %.2f")
+                    'Mínimo_Empleados_常规_$': st.column_config.NumberColumn('Mínimo Empleados ($)', format="$ %.2f"),
+                    'Mínimo_Empleados_$': st.column_config.NumberColumn('Mínimo por Empleados ($)', format="$ %.2f"),
+                    'Impuesto_Determinado_Oficial_$': st.column_config.NumberColumn('Monto Determinado Final', format="$ %.2f")
                 })
                 
+                # Preparar descarga del Excel definitivo con todas las columnas añadidas
                 output = io.BytesIO()
                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                    df.to_excel(writer, index=False, sheet_name=f'Control_Completo_{anio_mas}')
+                    df.to_excel(writer, index=False, sheet_name=f'Auditoria_{anio_mas}')
                 processed_data = output.getvalue()
                 
                 st.download_button(
-                    label=f"📥 Descargar Excel con Mínimos Calculados {anio_mas}",
+                    label=f"📥 Descargar Excel Controlado {anio_mas}",
                     data=processed_data,
                     file_name=f"control_fiscal_completo_{anio_mas}.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
