@@ -83,7 +83,7 @@ tab1, tab2 = st.tabs(["🧮 Calculadora Individual", "📂 Procesamiento Masivo 
 with tab1:
     st.header("Consulta Individual de Contribuyente")
     
-    # Diseño horizontal en una misma fila (4 columnas)
+    # Diseño horizontal en una misma fila (4 columnas alineadas)
     col_a, col_b, col_c, col_d = st.columns([1, 2, 2, 1])
     
     with col_a:
@@ -117,14 +117,21 @@ with tab1:
         with col_res3:
             st.warning(f"**Monto Determinado: $ {monto_final:,.2f}**")
             
-        # Machete informativo de rangos
+        # Machete informativo de rangos de ingresos (Igual a image_a61d7b.png)
         t = escalas_por_anio[anio_ind][sector_sel]
-        st.info(f"Rangos aplicados para {sector_sel} en el período {anio_ind}:\n"
+        st.info(f"📋 **Rangos de Alícuotas aplicados para {sector_sel} en el período {anio_ind}:**\n"
                 f"- Menos de ${t['limite_5_a_7']:,} ➡️ 5‰ (Pequeño)\n"
                 f"- Desde ${t['limite_5_a_7']:,} hasta ${t['limite_7_a_8']-1:,} ➡️ 7‰ (Pequeño)\n"
                 f"- Desde ${t['limite_7_a_8']:,} hasta ${t['limite_8_to_12']-1:,} ➡️ 8‰ (Mediano)\n"
                 f"- Desde ${t['limite_8_to_12']:,} hasta ${t['limite_12_to_15']-1:,} ➡️ 12‰ (Grande)\n"
                 f"- ${t['limite_12_to_15']:,} o más ➡️ 15‰ (Grande)")
+        
+        # Machete informativo de mínimos por empleados (Espejo del cuadro anterior)
+        st.info(f"👥 **Mínimos Generales por Dotación de Personal (Valor del Módulo Fiscal: ${VALOR_MODULO}):**\n"
+                f"- 1 Empleado ➡️ 170 MF (**$ 15,130.00**)\n"
+                f"- 2 Empleados ➡️ 260 MF (**$ 23,140.00**)\n"
+                f"- 3 Empleados ➡️ 350 MF (**$ 31,150.00**)\n"
+                f"- 4 o más Empleados ➡️ 350 MF + 100 MF por cada empleado adicional (**$ 31,150.00 + $ 8,900.00 c/u**)")
 
 with tab2:
     st.header("Control de Inconsistencias Masivo")
@@ -140,7 +147,7 @@ with tab2:
             
             columnas = df.columns.tolist()
             
-            # Columnas de mapeo (4 columnas alineadas)
+            # Columnas de mapeo (4 columnas horizontales)
             col_x, col_y, col_w, col_z = st.columns(4)
             with col_x:
                 col_sec = st.selectbox("Columna SECTOR / ACTIVIDAD:", columnas)
@@ -152,7 +159,7 @@ with tab2:
                 anio_mas = st.selectbox("📅 Año Fiscal a Auditar:", [2026, 2025], key="anio_masivo")
             
             if st.button("Procesar y Buscar Inconsistencias", type="primary"):
-                # 1. Calcular alícuotas e ingresos de siempre
+                # 1. Calcular alícuotas e ingresos tradicionales
                 res_alicuotas = df.apply(lambda r: evaluar_contribuyente(anio_mas, r[col_sec], r[col_ing]), axis=1)
                 
                 df['Año_Fiscal_Auditado'] = anio_mas
@@ -160,26 +167,25 @@ with tab2:
                 df['Alícuota_Calculada_‰'] = [res[1] for res in res_alicuotas]
                 df['Impuesto_por_Ingresos_$'] = (df[col_ing] * df['Alícuota_Calculada_‰']) / 1000
                 
-                # 2. CONTROL COMPLETO EN EL MASIVO: Calcular módulos y pesos por cantidad de empleados
+                # 2. Control de mínimos por empleados en procesamiento masivo
                 res_empleados = df[col_emp].apply(calcular_minimo_empleados)
                 df['Mínimo_Empleados_MF'] = [res[0] for res in res_empleados]
                 df['Mínimo_Empleados_$'] = [res[1] for res in res_empleados]
                 
-                # 3. Cruzar ambos para determinar cuál es el mayor (Monto Determinado Oficial)
+                # 3. Determinar el impuesto definitivo oficial (El mayor de ambos montos)
                 df['Impuesto_Determinado_Oficial_$'] = df[['Impuesto_por_Ingresos_$', 'Mínimo_Empleados_$']].max(axis=1)
                 
                 st.success(f"¡Procesamiento masivo completado! Escala {anio_mas} con control de mínimos aplicada.")
                 
-                # Mostramos en pantalla formateando dinámicamente todas las columnas de dinero con el signo "$"
+                # Visualización ordenada en tabla interactiva con formato moneda
                 st.dataframe(df, column_config={
                     col_ing: st.column_config.NumberColumn(col_ing, format="$ %.2f"),
                     'Impuesto_por_Ingresos_$': st.column_config.NumberColumn('Impuesto por Ingresos', format="$ %.2f"),
-                    'Mínimo_Empleados_常规_$': st.column_config.NumberColumn('Mínimo Empleados ($)', format="$ %.2f"),
                     'Mínimo_Empleados_$': st.column_config.NumberColumn('Mínimo por Empleados ($)', format="$ %.2f"),
                     'Impuesto_Determinado_Oficial_$': st.column_config.NumberColumn('Monto Determinado Final', format="$ %.2f")
                 })
                 
-                # Preparar descarga del Excel definitivo con todas las columnas añadidas
+                # Generación del reporte Excel descargable
                 output = io.BytesIO()
                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                     df.to_excel(writer, index=False, sheet_name=f'Auditoria_{anio_mas}')
