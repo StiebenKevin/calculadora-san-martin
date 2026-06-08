@@ -1,3 +1,7 @@
+Acá tenés el código completo y exacto de tu última versión de app.py, con tus títulos modificados, el formato de moneda corregido en la tabla masiva, y las tres escalas de años (2024, 2025 y 2026) listas para usar:
+
+📝 Código Integral (app.py)
+Python
 import streamlit as st
 import pandas as pd
 from PIL import Image
@@ -19,7 +23,7 @@ st.markdown("---")
 # VALOR DEL MÓDULO FISCAL
 VALOR_MODULO = 89
 
-# 1. ESTRUCTURA DE ESCALAS POR AÑO FISCAL (2024 Agregado según image_a5bf29.png, 2025 y 2026)
+# 1. ESTRUCTURA DE ESCALAS POR AÑO FISCAL (2024, 2025 y 2026)
 escalas_por_anio = {
     2026: {
         "Agropecuario": {"limite_5_a_7": 244789000, "limite_7_a_8": 368103000, "limite_8_to_12": 1187425000, "limite_12_to_15": 3492431000},
@@ -123,7 +127,7 @@ with tab1:
         with col_res3:
             st.warning(f"**Monto Determinado: $ {monto_final:,.2f}**")
             
-        # Machete informativo de rangos de ingresos (Igual a image_a61d7b.png)
+        # Machete informativo de rangos de ingresos
         t = escalas_por_anio[anio_ind][sector_sel]
         st.info(f"📋 **Rangos de Alícuotas aplicados para {sector_sel} en el período {anio_ind}:**\n"
                 f"- Menos de ${t['limite_5_a_7']:,} ➡️ 5‰ (Pequeño)\n"
@@ -183,10 +187,10 @@ with tab2:
                 
                 st.success(f"¡Procesamiento masivo completado! Escala {anio_mas} con control de mínimos aplicada.")
                 
-                # Visualización ordenada en tabla interactiva con formato moneda
+                # Visualización ordenada en tabla interactiva con formato moneda vinculada correctamente
                 st.dataframe(df, column_config={
                     col_ing: st.column_config.NumberColumn(col_ing, format="$ %.2f"),
-                    'Impuesto_por_Ingresos_$': st.column_config.NumberColumn('Tasa a Abonar', format="$ %.2f"),
+                    'Impuesto_por_Ingresos_$': st.column_config.NumberColumn('Impuesto por Ingresos', format="$ %.2f"),
                     'Mínimo_Empleados_$': st.column_config.NumberColumn('Mínimo por Empleados ($)', format="$ %.2f"),
                     'Impuesto_Determinado_Oficial_$': st.column_config.NumberColumn('Monto Determinado Final', format="$ %.2f")
                 })
