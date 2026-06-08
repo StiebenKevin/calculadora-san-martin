@@ -114,7 +114,7 @@ with tab1:
         st.markdown(
             f"""
             <div style="background-color: #f0f4f8; padding: 20px; border-radius: 10px; border-left: 6px solid #1f77b4; margin-bottom: 20px;">
-                <h4 style="margin: 0; color: #1e3d59; font-size: 18px;">📋 Veredicto de Auditoría — Período {anio_ind}</h4>
+                <h4 style="margin: 0; color: #1e3d59; font-size: 18px;">Resultado — Período {anio_ind}</h4>
                 <p style="margin: 8px 0 0 0; font-size: 22px; color: #12232e;">
                     Contribuyente <b>{cat.upper()}</b> — Alícuota Asignada: <span style="color: #1f77b4; font-weight: bold;">{alic} ‰</span>
                 </p>
