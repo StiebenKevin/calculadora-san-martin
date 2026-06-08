@@ -13,8 +13,7 @@ try:
 except:
     st.subheader("Municipalidad de General San Martín")
 
-st.title("📊 Calculadora de Alícuotas e Inconsistencias Fiscales")
-st.markdown("Herramienta interna para la Dirección de Inteligencia Fiscal")
+st.title("📊 Calculadora de Alícuotas")
 st.markdown("---")
 
 # VALOR DEL MÓDULO FISCAL
@@ -85,10 +84,10 @@ def evaluar_contribuyente(anio, sector, ingresos):
         return "Grande", 15
 
 # Pestañas de la aplicación
-tab1, tab2 = st.tabs(["🧮 Calculadora Individual", "📂 Procesamiento Masivo (Excel)"])
+tab1, tab2 = st.tabs(["🧮 Calculadora Individual", "📂 Calculadora Masiva (Excel)"])
 
 with tab1:
-    st.header("Consulta Individual de Contribuyente")
+    st.header("Consulta Individual")
     
     # Diseño horizontal en una misma fila (4 columnas alineadas)
     col_a, col_b, col_c, col_d = st.columns([1, 2, 2, 1])
@@ -96,9 +95,9 @@ with tab1:
     with col_a:
         anio_ind = st.selectbox("📅 Período:", [2026, 2025, 2024], key="anio_individual")
     with col_b:
-        sector_sel = st.selectbox("Seleccione el Sector de Actividad:", list(escalas_por_anio[anio_ind].keys()))
+        sector_sel = st.selectbox("Seleccione la Actividad:", list(escalas_por_anio[anio_ind].keys()))
     with col_c:
-        ingresos_num = st.number_input("Ingresos Brutos Anuales ($):", min_value=0.0, step=10000.0, format="%.2f")
+        ingresos_num = st.number_input("Ingreso Total gravado, no gravado y exento del periodo fiscal anterior ($):", min_value=0.0, step=10000.0, format="%.2f")
     with col_d:
         empleados_num = st.number_input("👥 Empleados:", min_value=0, step=1, value=1)
         
@@ -118,7 +117,7 @@ with tab1:
         # Panel visual con el desglose individual
         col_res1, col_res2, col_res3 = st.columns(3)
         with col_res1:
-            st.metric(label="Impuesto por Alícuota (Ingresos)", value=f"$ {impuesto_por_alicuota:,.2f}")
+            st.metric(label="Tasa por Alícuota (Ingresos)", value=f"$ {impuesto_por_alicuota:,.2f}")
         with col_res2:
             st.metric(label="Mínimo por Empleados", value=f"{modulos} MF", delta=f"$ {impuesto_minimo:,.2f}", delta_color="off")
         with col_res3:
@@ -134,7 +133,7 @@ with tab1:
                 f"- ${t['limite_12_to_15']:,} o más ➡️ 15‰ (Grande)")
         
         # Machete informativo de mínimos por empleados
-        st.info(f"👥 **Mínimos Generales por Dotación de Personal (Valor del Módulo Fiscal: ${VALOR_MODULO}):**\n"
+        st.info(f"👥 **Mínimos Generales (Valor del Módulo Fiscal: ${VALOR_MODULO}):**\n"
                 f"- 1 Empleado ➡️ 170 MF (**$ 15,130.00**)\n"
                 f"- 2 Empleados ➡️ 260 MF (**$ 23,140.00**)\n"
                 f"- 3 Empleados ➡️ 350 MF (**$ 31,150.00**)\n"
@@ -187,7 +186,7 @@ with tab2:
                 # Visualización ordenada en tabla interactiva con formato moneda
                 st.dataframe(df, column_config={
                     col_ing: st.column_config.NumberColumn(col_ing, format="$ %.2f"),
-                    'Impuesto_por_Ingresos_$': st.column_config.NumberColumn('Impuesto por Ingresos', format="$ %.2f"),
+                    'Impuesto_por_Ingresos_$': st.column_config.NumberColumn('Tasa a Abonar', format="$ %.2f"),
                     'Mínimo_Empleados_$': st.column_config.NumberColumn('Mínimo por Empleados ($)', format="$ %.2f"),
                     'Impuesto_Determinado_Oficial_$': st.column_config.NumberColumn('Monto Determinado Final', format="$ %.2f")
                 })
@@ -199,7 +198,7 @@ with tab2:
                 processed_data = output.getvalue()
                 
                 st.download_button(
-                    label=f"📥 Descargar Excel Controlado {anio_mas}",
+                    label=f"📥 Descargar Excel para control {anio_mas}",
                     data=processed_data,
                     file_name=f"control_fiscal_completo_{anio_mas}.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
