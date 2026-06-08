@@ -20,7 +20,7 @@ st.markdown("---")
 # VALOR DEL MÓDULO FISCAL
 VALOR_MODULO = 89
 
-# 1. ESTRUCTURA DE ESCALAS POR AÑO FISCAL (2025 y 2026 Corregidas)
+# 1. ESTRUCTURA DE ESCALAS POR AÑO FISCAL (2024 Agregado según image_a5bf29.png, 2025 y 2026)
 escalas_por_anio = {
     2026: {
         "Agropecuario": {"limite_5_a_7": 244789000, "limite_7_a_8": 368103000, "limite_8_to_12": 1187425000, "limite_12_to_15": 3492431000},
@@ -35,6 +35,13 @@ escalas_por_anio = {
         "Comercio": {"limite_5_a_7": 745715000, "limite_7_a_8": 1121376000, "limite_8_to_12": 3617338000, "limite_12_to_15": 10639232000},
         "Servicios": {"limite_5_a_7": 182550000, "limite_7_a_8": 274512000, "limite_8_to_12": 885522000, "limite_12_to_15": 2604474000},
         "Construcción": {"limite_5_a_7": 223489000, "limite_7_a_8": 354120000, "limite_8_to_12": 1142320000, "limite_12_to_15": 3359767000}
+    },
+    2024: {
+        "Agropecuario": {"limite_5_a_7": 87975000, "limite_7_a_8": 132293000, "limite_8_to_12": 426750000, "limite_12_to_15": 1255148000},
+        "Industria y Minería": {"limite_5_a_7": 260100000, "limite_7_a_8": 391128000, "limite_8_to_12": 1261703000, "limite_12_to_15": 3710890000},
+        "Comercio": {"limite_5_a_7": 347225000, "limite_7_a_8": 522143000, "limite_8_to_12": 1684330000, "limite_12_to_15": 4953913000},
+        "Servicios": {"limite_5_a_7": 85000000, "limite_7_a_8": 127820000, "limite_8_to_12": 412323000, "limite_12_to_15": 1212713000},
+        "Construcción": {"limite_5_a_7": 109650000, "limite_7_a_8": 164888000, "limite_8_to_12": 531895000, "limite_12_to_15": 1564398000}
     }
 }
 
@@ -87,7 +94,7 @@ with tab1:
     col_a, col_b, col_c, col_d = st.columns([1, 2, 2, 1])
     
     with col_a:
-        anio_ind = st.selectbox("📅 Período:", [2026, 2025], key="anio_individual")
+        anio_ind = st.selectbox("📅 Período:", [2026, 2025, 2024], key="anio_individual")
     with col_b:
         sector_sel = st.selectbox("Seleccione el Sector de Actividad:", list(escalas_por_anio[anio_ind].keys()))
     with col_c:
@@ -126,7 +133,7 @@ with tab1:
                 f"- Desde ${t['limite_8_to_12']:,} hasta ${t['limite_12_to_15']-1:,} ➡️ 12‰ (Grande)\n"
                 f"- ${t['limite_12_to_15']:,} o más ➡️ 15‰ (Grande)")
         
-        # Machete informativo de mínimos por empleados (Espejo del cuadro anterior)
+        # Machete informativo de mínimos por empleados
         st.info(f"👥 **Mínimos Generales por Dotación de Personal (Valor del Módulo Fiscal: ${VALOR_MODULO}):**\n"
                 f"- 1 Empleado ➡️ 170 MF (**$ 15,130.00**)\n"
                 f"- 2 Empleados ➡️ 260 MF (**$ 23,140.00**)\n"
@@ -156,7 +163,7 @@ with tab2:
             with col_w:
                 col_emp = st.selectbox("Columna CANTIDAD EMPLEADOS:", columnas)
             with col_z:
-                anio_mas = st.selectbox("📅 Año Fiscal a Auditar:", [2026, 2025], key="anio_masivo")
+                anio_mas = st.selectbox("📅 Año Fiscal a Auditar:", [2026, 2025, 2024], key="anio_masivo")
             
             if st.button("Procesar y Buscar Inconsistencias", type="primary"):
                 # 1. Calcular alícuotas e ingresos tradicionales
