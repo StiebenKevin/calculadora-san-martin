@@ -1,6 +1,7 @@
-Acá tenés el código completo y exacto de tu última versión de app.py, con tus títulos modificados, el formato de moneda corregido en la tabla masiva, y las tres escalas de años (2024, 2025 y 2026) listas para usar:
+¡Mala mía! Te incluí el título con el emoji de la nota (📝 Código Integral (app.py)) dentro del bloque de código y Python intentó leer eso como si fuera parte del programa, tirándote ese SyntaxError.
 
-📝 Código Integral (app.py)
+Acá tenés el código limpio, empezando estrictamente desde el primer import, para que lo puedas copiar y pegar completo sin que salte ningún error de sintaxis:
+
 Python
 import streamlit as st
 import pandas as pd
@@ -187,7 +188,7 @@ with tab2:
                 
                 st.success(f"¡Procesamiento masivo completado! Escala {anio_mas} con control de mínimos aplicada.")
                 
-                # Visualización ordenada en tabla interactiva con formato moneda vinculada correctamente
+                # Visualización ordenada en tabla interactiva con formato moneda
                 st.dataframe(df, column_config={
                     col_ing: st.column_config.NumberColumn(col_ing, format="$ %.2f"),
                     'Impuesto_por_Ingresos_$': st.column_config.NumberColumn('Impuesto por Ingresos', format="$ %.2f"),
