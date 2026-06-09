@@ -145,7 +145,7 @@ with tab1:
         st.markdown(
             f"""
             <div style="background-color: #f0f4f8; padding: 20px; border-radius: 10px; border-left: 6px solid #1e3d59; margin-bottom: 20px;">
-                <h4 style="margin: 0; color: #1e3d59; font-size: 18px;">📋 Veredicto de Auditoría — Período {NOMBRES_MESES[mes_ind]} / {anio_ind}</h4>
+                <h4 style="margin: 0; color: #1e3d59; font-size: 18px;">Resultado — Período {NOMBRES_MESES[mes_ind]} / {anio_ind}</h4>
                 <p style="margin: 8px 0 0 0; font-size: 22px; color: #12232e;">
                     Contribuyente <b>{cat.upper()}</b> — Alícuota Asignada: <span style="color: #1e3d59; font-weight: bold;">{alic} ‰</span>
                 </p>
@@ -158,11 +158,11 @@ with tab1:
         with col_res1:
             st.metric(label="Tasa por Alícuota (Ingresos)", value=f"$ {impuesto_por_alicuota:,.2f}")
         with col_res2:
-            st.metric(label=f"Mínimo por Dotación ({NOMBRES_MESES[mes_ind]} {anio_ind})", value=f"$ {impuesto_minimo:,.2f}", delta=f"{modulos} MF", delta_color="off")
+            st.metric(label=f"Mínimo por Empleados ({NOMBRES_MESES[mes_ind]} {anio_ind})", value=f"$ {impuesto_minimo:,.2f}", delta=f"{modulos} MF", delta_color="off")
         with col_res3:
-            st.metric(label="⚡ MONTO DETERMINADO FINAL", value=f"$ {monto_final:,.2f}")
+            st.metric(label="MONTO DETERMINADO", value=f"$ {monto_final:,.2f}")
             
-        st.markdown("### 🔍 Cuadros de Referencia Fiscal")
+        st.markdown("### 🔍 Cuadros de Referencia")
         col_tab_a, col_tab_b = st.columns(2)
         
         with col_tab_a:
@@ -212,7 +212,7 @@ with tab1:
             tabla_minimos_html = f"""
             <table style="width:100%; border-collapse: collapse; margin-top: 10px; font-size: 14px;">
                 <tr style="background-color: #1e3d59; color: white; text-align: left;">
-                    <th style="padding: 8px; border: 1px solid #ddd;">Dotación de Personal</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Cantidad de Empleados</th>
                     <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Módulos (MF)</th>
                     <th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Importe en Pesos</th>
                 </tr>
@@ -285,10 +285,10 @@ with tab2:
                 
                 st.dataframe(df, use_container_width=True, column_config={
                     col_ing: st.column_config.NumberColumn(col_ing, format="$ %.2f"),
-                    'Valor_Módulo_Aplicado': st.column_config.NumberColumn('Módulo ($)', format="$ %.2f"),
-                    'Impuesto_por_Ingresos_$': st.column_config.NumberColumn('Impuesto por Ingresos', format="$ %.2f"),
+                    'Valor_Módulo': st.column_config.NumberColumn('Módulo ($)', format="$ %.2f"),
+                    'Tasa_por_Ingresos_$': st.column_config.NumberColumn('Tasa por Ingresos', format="$ %.2f"),
                     'Mínimo_Empleados_$': st.column_config.NumberColumn('Mínimo por Empleados ($)', format="$ %.2f"),
-                    'Impuesto_Determinado_Oficial_$': st.column_config.NumberColumn('Monto Determinado Final', format="$ %.2f")
+                    'Impuesto_Determinado_$': st.column_config.NumberColumn('Monto Determinado Final', format="$ %.2f")
                 })
                 
                 output = io.BytesIO()
