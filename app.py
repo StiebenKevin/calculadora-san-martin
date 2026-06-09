@@ -239,8 +239,8 @@ with tab1:
             st.markdown(tabla_minimos_html, unsafe_allow_html=True)
 
 with tab2:
-    st.header("Control de Inconsistencias Masivo")
-    st.markdown("Configurá el período normativo y las columnas correspondientes. Luego, cargá el padrón abajo.")
+    st.header("Control Masivo")
+    st.markdown("Configurá el período normativo y las columnas correspondientes. Luego, cargá el excel abajo.")
     
     # Pre-cargar archivo en el estado de la aplicación para persistencia limpia
     archivo = st.file_uploader("Cargar archivo Excel (.xlsx)", type=["xlsx"])
