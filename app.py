@@ -242,73 +242,75 @@ with tab2:
     st.header("Control de Inconsistencias Masivo")
     st.markdown("Configurá el período normativo y las columnas correspondientes. Luego, cargá el padrón abajo.")
     
-    # 1. BARRA HORIZONTAL DE SELECTORES AL PRINCIPIO (Igual a la estructura individual)
-    col_m1, col_m2, col_m3, col_m4, col_m5 = st.columns([1.5, 1.5, 1.5, 1, 1.2])
-    
-    with col_m4:
-        anio_mas = st.selectbox("📅 Año Fiscal:", [2026, 2025, 2024], key="anio_masivo")
-    with col_m5:
-        mes_mas = st.selectbox("📆 Mes Fiscal:", list(NOMBRES_MESES.keys()), format_func=lambda x: NOMBRES_MESES[x], key="mes_masivo")
-        
-    # Inicializar selectores de columnas vacíos o genéricos antes de que suban el archivo
-    columnas_placeholder = ["Subí un archivo para mapear"]
-    
-    with col_m1:
-        col_sec = st.selectbox("ACTIVIDAD (Sector):", columnas_placeholder, key="masivo_actividad", disabled=True if 'df_masivo' not in st.session_state else False)
-    with col_m2:
-        col_ing = st.selectbox("INGRESOS:", columnas_placeholder, key="masivo_ingresos", disabled=True if 'df_masivo' not in st.session_state else False)
-    with col_m3:
-        col_emp = st.selectbox("👥 EMPLEADOS:", columnas_placeholder, key="masivo_empleados", disabled=True if 'df_masivo' not in st.session_state else False)
-        
-    st.markdown("---")
-    
-    # 2. ÁREA DE CARGA DE DATOS
+    # Pre-cargar archivo en el estado de la aplicación para persistencia limpia
     archivo = st.file_uploader("Cargar archivo Excel (.xlsx)", type=["xlsx"])
+    
+    columnas_selectores = ["Subí un archivo para mapear"]
+    deshabilitado = True
+    df_cargado = None
     
     if archivo is not None:
         try:
-            # Leer el dataframe y guardarlo en el estado o contexto actual
-            df = pd.read_excel(archivo)
-            columnas_reales = df.columns.tolist()
+            df_cargado = pd.read_excel(archivo)
+            columnas_selectores = df_cargado.columns.tolist()
+            deshabilitado = False
+        except Exception as e:
+            st.error(f"Error al leer el archivo: {e}")
             
-            # Forzar una recarga limpia actualizando los selectores horizontales con las columnas del Excel real
-            with col_m1:
-                # Intentamos pre-seleccionar si coincide el nombre común, sino toma la primera
-                idx_sec = columnas_reales.index("Actividad") if "Actividad" in columnas_reales else 0
-                col_sec = st.selectbox("ACTIVIDAD (Sector):", columnas_reales, key="masivo_actividad_real", index=idx_sec)
-            with col_m2:
-                idx_ing = columnas_reales.index("Ingresos") if "Ingresos" in columnas_reales else 0
-                col_ing = st.selectbox("INGRESOS:", columnas_reales, key="masivo_ingresos_real", index=idx_ing)
-            with col_m3:
-                idx_emp = columnas_reales.index("Empleados") if "Empleados" in columnas_reales else 0
-                col_emp = st.selectbox("👥 EMPLEADOS:", columnas_reales, key="masivo_empleados_real", index=idx_emp)
+    st.markdown("---")
+    st.markdown("### ⚙️ Configuración del Padrón y Período Normativo")
+    
+    # ÚNICA FILA DE SELECTORES HORIZONTALES
+    col_m1, col_m2, col_m3, col_m4, col_m5 = st.columns([1.5, 1.5, 1.5, 1, 1.2])
+    
+    with col_m1:
+        # Pre-selección inteligente por defecto si las columnas existen en el Excel
+        idx_sec = columnas_selectores.index("ACTIVIDAD") if "ACTIVIDAD" in columnas_selectores else 0
+        col_sec = st.selectbox("ACTIVIDAD (Sector):", columnas_selectores, key="masivo_actividad", disabled=deshabilitado, index=idx_sec)
+        
+    with col_m2:
+        idx_ing = columnas_selectores.index("INGRESOS") if "INGRESOS" in columnas_selectores else 0
+        col_ing = st.selectbox("INGRESOS:", columnas_selectores, key="masivo_ingresos", disabled=deshabilitado, index=idx_ing)
+        
+    with col_m3:
+        idx_emp = columnas_selectores.index("EMPLEADOS") if "EMPLEADOS" in columnas_selectores else 0
+        col_emp = st.selectbox("👥 EMPLEADOS:", columnas_selectores, key="masivo_empleados", disabled=deshabilitado, index=idx_emp)
+        
+    with col_m4:
+        anio_mas = st.selectbox("📅 Año Fiscal:", [2026, 2025, 2024], key="anio_masivo")
+        
+    with col_m5:
+        mes_mas = st.selectbox("📆 Mes Fiscal:", list(NOMBRES_MESES.keys()), format_func=lambda x: NOMBRES_MESES[x], key="mes_masivo")
             
-            st.write("📋 Vista previa de los datos cargados:")
-            st.dataframe(df.head(3), use_container_width=True)
-            
-            st.markdown(" ")
-            
-            # Botón de ejecución ubicado abajo de la vista previa
-            if st.button("Procesar y Buscar Inconsistencias 🚀", type="primary", use_container_width=True):
-                res_alicuotas = df.apply(lambda r: evaluar_contribuyente(anio_mas, r[col_sec], r[col_ing]), axis=1)
+    st.markdown("---")
+    
+    # 3. PROCESAMIENTO Y VISTA PREVIA
+    if df_cargado is not None:
+        st.write("📋 Vista previa de los datos cargados:")
+        st.dataframe(df_cargado.head(3), use_container_width=True)
+        st.markdown(" ")
+        
+        if st.button("Procesar y Buscar Inconsistencias 🚀", type="primary", use_container_width=True):
+            try:
+                res_alicuotas = df_cargado.apply(lambda r: evaluar_contribuyente(anio_mas, r[col_sec], r[col_ing]), axis=1)
                 
-                df['Año_Fiscal'] = anio_mas
-                df['Mes_Fiscal'] = NOMBRES_MESES[mes_mas]
-                df['Valor_Módulo'] = obtener_valor_modulo_real(anio_mas, mes_mas)
-                df['Tamaño'] = [res[0] for res in res_alicuotas]
-                df['Alícuota_‰'] = [res[1] for res in res_alicuotas]
+                df_cargado['Año_Fiscal'] = anio_mas
+                df_cargado['Mes_Fiscal'] = NOMBRES_MESES[mes_mas]
+                df_cargado['Valor_Módulo'] = obtener_valor_modulo_real(anio_mas, mes_mas)
+                df_cargado['Tamaño'] = [res[0] for res in res_alicuotas]
+                df_cargado['Alícuota_‰'] = [res[1] for res in res_alicuotas]
                 
-                df['Tasa_por_Ingresos_$'] = (df[col_ing] * df['Alícuota_‰']) / 1000
+                df_cargado['Tasa_por_Ingresos_$'] = (df_cargado[col_ing] * df_cargado['Alícuota_‰']) / 1000
                 
-                res_empleados = df[col_emp].apply(lambda x: calcular_minimo_empleados(x, anio_mas, mes_mas))
-                df['Mínimo_Empleados_MF'] = [res[0] for res in res_empleados]
-                df['Mínimo_Empleados_$'] = [res[1] for res in res_empleados]
+                res_empleados = df_cargado[col_emp].apply(lambda x: calcular_minimo_empleados(x, anio_mas, mes_mas))
+                df_cargado['Mínimo_Empleados_MF'] = [res[0] for res in res_empleados]
+                df_cargado['Mínimo_Empleados_$'] = [res[1] for res in res_empleados]
                 
-                df['Impuesto_Determinado_$'] = df[['Tasa_por_Ingresos_$', 'Mínimo_Empleados_$']].max(axis=1)
+                df_cargado['Impuesto_Determinado_$'] = df_cargado[['Tasa_por_Ingresos_$', 'Mínimo_Empleados_$']].max(axis=1)
                 
                 st.success(f"¡Procesamiento masivo completado para {NOMBRES_MESES[mes_mas]} / {anio_mas}!")
                 
-                st.dataframe(df, use_container_width=True, column_config={
+                st.dataframe(df_cargado, use_container_width=True, column_config={
                     col_ing: st.column_config.NumberColumn(col_ing, format="$ %.2f"),
                     'Valor_Módulo': st.column_config.NumberColumn('Módulo ($)', format="$ %.2f"),
                     'Tasa_por_Ingresos_$': st.column_config.NumberColumn('Tasa por Ingresos', format="$ %.2f"),
@@ -318,7 +320,7 @@ with tab2:
                 
                 output = io.BytesIO()
                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                    df.to_excel(writer, index=False, sheet_name=f'Auditoria_{mes_mas}_{anio_mas}')
+                    df_cargado.to_excel(writer, index=False, sheet_name=f'Auditoria_{mes_mas}_{anio_mas}')
                 processed_data = output.getvalue()
                 
                 st.markdown(" ")
@@ -329,5 +331,5 @@ with tab2:
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     use_container_width=True
                 )
-        except Exception as e:
-            st.error(f"Error al procesar el archivo: {e}")
+            except Exception as e:
+                st.error(f"Error al procesar el archivo: {e}")
