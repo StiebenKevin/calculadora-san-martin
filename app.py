@@ -120,7 +120,6 @@ tab1, tab2 = st.tabs(["🧮 Calculadora Individual", "📂 Calculadora Masiva (E
 
 with tab1:
     st.header("Consulta Individual")
-    
     col_a1, col_a2, col_b, col_c, col_d = st.columns([1, 1.2, 2, 2, 1])
     
     with col_a1:
@@ -141,7 +140,6 @@ with tab1:
         monto_final = max(impuesto_por_alicuota, impuesto_minimo)
         
         st.markdown("---")
-        
         st.markdown(
             f"""
             <div style="background-color: #f0f4f8; padding: 20px; border-radius: 10px; border-left: 6px solid #1e3d59; margin-bottom: 20px;">
@@ -254,7 +252,7 @@ with tab2:
             
             columnas = df.columns.tolist()
             
-            # PASO 1: SECTORES Y SELECTORES LLEVADOS EXCLUSIVAMENTE AL SIDEBAR
+            # CONFIGURACIÓN LLEVADA AL SIDEBAR
             st.sidebar.markdown("### ⚙️ Configuración del Padrón")
             col_sec = st.sidebar.selectbox("ACTIVIDAD:", columnas)
             col_ing = st.sidebar.selectbox("INGRESOS:", columnas)
@@ -264,7 +262,6 @@ with tab2:
             anio_mas = st.sidebar.selectbox("📅 Año Fiscal:", [2026, 2025, 2024], key="anio_masivo")
             mes_mas = st.sidebar.selectbox("📆 Mes Fiscal:", list(NOMBRES_MESES.keys()), format_func=lambda x: NOMBRES_MESES[x], key="mes_masivo")
             
-            # Botón de ejecución en el sidebar para liberar espacio en pantalla principal
             if st.sidebar.button("Procesar y Buscar Inconsistencias", type="primary", use_container_width=True):
                 res_alicuotas = df.apply(lambda r: evaluar_contribuyente(anio_mas, r[col_sec], r[col_ing]), axis=1)
                 
@@ -273,16 +270,20 @@ with tab2:
                 df['Valor_Módulo'] = obtener_valor_modulo_real(anio_mas, mes_mas)
                 df['Tamaño'] = [res[0] for res in res_alicuotas]
                 df['Alícuota_‰'] = [res[1] for res in res_alicuotas]
-                df['Tasa_Determinada_$'] = (df[col_ing] * df['Alícuota_Calculada_‰']) / 1000
+                
+                # CORRECCIÓN 1: Usar 'Alícuota_‰' en lugar de 'Alícuota_Calculada_‰'
+                df['Tasa_por_Ingresos_$'] = (df[col_ing] * df['Alícuota_‰']) / 1000
                 
                 res_empleados = df[col_emp].apply(lambda x: calcular_minimo_empleados(x, anio_mas, mes_mas))
                 df['Mínimo_Empleados_MF'] = [res[0] for res in res_empleados]
                 df['Mínimo_Empleados_$'] = [res[1] for res in res_empleados]
                 
-                df['Tasa_Determinada_$'] = df[['Tasa_Determinada_$', 'Mínimo_Empleados_$']].max(axis=1)
+                # CORRECCIÓN 2: Calcular el máximo cruzando las dos columnas monetarias correctas
+                df['Impuesto_Determinado_$'] = df[['Tasa_por_Ingresos_$', 'Mínimo_Empleados_$']].max(axis=1)
                 
                 st.success(f"¡Procesamiento masivo completado para {NOMBRES_MESES[mes_mas]} / {anio_mas}!")
                 
+                # CORRECCIÓN 3: Ajustar los identificadores en column_config con los nombres vigentes
                 st.dataframe(df, use_container_width=True, column_config={
                     col_ing: st.column_config.NumberColumn(col_ing, format="$ %.2f"),
                     'Valor_Módulo': st.column_config.NumberColumn('Módulo ($)', format="$ %.2f"),
