@@ -169,7 +169,7 @@ with tab1:
         
         with col_tab_a:
             t = escalas_por_anio[anio_ind][sector_sel]
-            st.markdown(f"**Escala de Alícuotas {anio_ind} (Evaluada en Base País): {sector_sel}**")
+            st.markdown(f"**Escala de Alícuotas {anio_ind}: {sector_sel}**")
             
             tabla_escalas_html = f"""
             <table style="width:100%; border-collapse: collapse; margin-top: 10px; font-size: 14px;">
