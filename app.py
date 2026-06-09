@@ -129,7 +129,7 @@ with tab1:
     with col_b:
         sector_sel = st.selectbox("Seleccione la Actividad:", list(escalas_por_anio[anio_ind].keys()))
     with col_c1:
-        ingresos_globales_num = st.number_input("Ingreso total gravado,no gravado y exento del periodo fiscal anterior:", min_value=0.0, step=10000.0, format="%.2f", help="Determina el tamaño del contribuyente y su alícuota.")
+        ingresos_globales_num = st.number_input("Ingreso total gravado,no gravado y exento:", min_value=0.0, step=10000.0, format="%.2f", help="Determina el tamaño del contribuyente y su alícuota.")
     with col_c2:
         ingresos_sm_num = st.number_input("Base San Martín:", min_value=0.0, step=10000.0, format="%.2f", help="Monto sobre el cual se aplicará la alícuota calculada.")
     with col_d:
