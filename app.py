@@ -240,7 +240,7 @@ with tab1:
 
 with tab2:
     st.header("Control de Inconsistencias Masivo")
-    st.markdown("Subí el Excel con el padrón en el área central. Luego, configurá los campos en la **barra lateral izquierda**.")
+    st.markdown("Subí el Excel con el padrón en el área central y configurá las columnas y el período en la barra horizontal.")
     
     archivo = st.file_uploader("Cargar archivo Excel (.xlsx)", type=["xlsx"])
     
@@ -252,17 +252,27 @@ with tab2:
             
             columnas = df.columns.tolist()
             
-            # CONFIGURACIÓN LLEVADA AL SIDEBAR
-            st.sidebar.markdown("### ⚙️ Configuración del Padrón")
-            col_sec = st.sidebar.selectbox("ACTIVIDAD:", columnas)
-            col_ing = st.sidebar.selectbox("INGRESOS:", columnas)
-            col_emp = st.sidebar.selectbox("CANTIDAD EMPLEADOS:", columnas)
+            st.markdown("---")
+            st.markdown("### ⚙️ Configuración del Padrón y Período Normativo")
             
-            st.sidebar.markdown("### 📅 Período Normativo")
-            anio_mas = st.sidebar.selectbox("📅 Año Fiscal:", [2026, 2025, 2024], key="anio_masivo")
-            mes_mas = st.sidebar.selectbox("📆 Mes Fiscal:", list(NOMBRES_MESES.keys()), format_func=lambda x: NOMBRES_MESES[x], key="mes_masivo")
+            # FILA HORIZONTAL DE SELECTORES SIMÉTRICA A LA PESTAÑA INDIVIDUAL
+            col_m1, col_m2, col_m3, col_m4, col_m5 = st.columns([1.5, 1.5, 1.5, 1, 1.2])
             
-            if st.sidebar.button("Procesar y Buscar Inconsistencias", type="primary", use_container_width=True):
+            with col_m1:
+                col_sec = st.selectbox("ACTIVIDAD:", columnas, key="masivo_actividad")
+            with col_m2:
+                col_ing = st.selectbox("INGRESOS:", columnas, key="masivo_ingresos")
+            with col_m3:
+                col_emp = st.selectbox("CANTIDAD EMPLEADOS:", columnas, key="masivo_empleados")
+            with col_m4:
+                anio_mas = st.selectbox("📅 Año Fiscal:", [2026, 2025, 2024], key="anio_masivo")
+            with col_m5:
+                mes_mas = st.selectbox("📆 Mes Fiscal:", list(NOMBRES_MESES.keys()), format_func=lambda x: NOMBRES_MESES[x], key="mes_masivo")
+            
+            st.markdown("---")
+            
+            # Botón de ejecución en el flujo principal horizontal
+            if st.button("Procesar y Buscar Inconsistencias 🚀", type="primary", use_container_width=True):
                 res_alicuotas = df.apply(lambda r: evaluar_contribuyente(anio_mas, r[col_sec], r[col_ing]), axis=1)
                 
                 df['Año_Fiscal'] = anio_mas
@@ -271,19 +281,16 @@ with tab2:
                 df['Tamaño'] = [res[0] for res in res_alicuotas]
                 df['Alícuota_‰'] = [res[1] for res in res_alicuotas]
                 
-                # CORRECCIÓN 1: Usar 'Alícuota_‰' en lugar de 'Alícuota_Calculada_‰'
                 df['Tasa_por_Ingresos_$'] = (df[col_ing] * df['Alícuota_‰']) / 1000
                 
                 res_empleados = df[col_emp].apply(lambda x: calcular_minimo_empleados(x, anio_mas, mes_mas))
                 df['Mínimo_Empleados_MF'] = [res[0] for res in res_empleados]
                 df['Mínimo_Empleados_$'] = [res[1] for res in res_empleados]
                 
-                # CORRECCIÓN 2: Calcular el máximo cruzando las dos columnas monetarias correctas
                 df['Impuesto_Determinado_$'] = df[['Tasa_por_Ingresos_$', 'Mínimo_Empleados_$']].max(axis=1)
                 
                 st.success(f"¡Procesamiento masivo completado para {NOMBRES_MESES[mes_mas]} / {anio_mas}!")
                 
-                # CORRECCIÓN 3: Ajustar los identificadores en column_config con los nombres vigentes
                 st.dataframe(df, use_container_width=True, column_config={
                     col_ing: st.column_config.NumberColumn(col_ing, format="$ %.2f"),
                     'Valor_Módulo': st.column_config.NumberColumn('Módulo ($)', format="$ %.2f"),
@@ -297,11 +304,13 @@ with tab2:
                     df.to_excel(writer, index=False, sheet_name=f'Auditoria_{mes_mas}_{anio_mas}')
                 processed_data = output.getvalue()
                 
+                st.markdown(" ")
                 st.download_button(
                     label=f"📥 Descargar Excel {NOMBRES_MESES[mes_mas]}_{anio_mas}",
                     data=processed_data,
-                    file_name=f"control_fiscal_{mes_mas}_{anio_mas}.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    file_name=f"control_fiscal_{NOMBRES_MESES[mes_mas]}_{anio_mas}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    use_container_width=True
                 )
         except Exception as e:
             st.error(f"Error al procesar el archivo: {e}")
