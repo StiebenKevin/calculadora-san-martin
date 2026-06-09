@@ -240,7 +240,6 @@ with tab1:
 
 with tab2:
     st.header("Control Masivo")
-    st.markdown("Configurá el período normativo y las columnas correspondientes. Luego, cargá el excel abajo.")
     
     # Pre-cargar archivo en el estado de la aplicación para persistencia limpia
     archivo = st.file_uploader("Cargar archivo Excel (.xlsx)", type=["xlsx"])
