@@ -240,38 +240,55 @@ with tab1:
 
 with tab2:
     st.header("Control de Inconsistencias Masivo")
-    st.markdown("Subí el Excel con el padrón en el área central y configurá las columnas y el período en la barra horizontal.")
+    st.markdown("Configurá el período normativo y las columnas correspondientes. Luego, cargá el padrón abajo.")
     
+    # 1. BARRA HORIZONTAL DE SELECTORES AL PRINCIPIO (Igual a la estructura individual)
+    col_m1, col_m2, col_m3, col_m4, col_m5 = st.columns([1.5, 1.5, 1.5, 1, 1.2])
+    
+    with col_m4:
+        anio_mas = st.selectbox("📅 Año Fiscal:", [2026, 2025, 2024], key="anio_masivo")
+    with col_m5:
+        mes_mas = st.selectbox("📆 Mes Fiscal:", list(NOMBRES_MESES.keys()), format_func=lambda x: NOMBRES_MESES[x], key="mes_masivo")
+        
+    # Inicializar selectores de columnas vacíos o genéricos antes de que suban el archivo
+    columnas_placeholder = ["Subí un archivo para mapear"]
+    
+    with col_m1:
+        col_sec = st.selectbox("ACTIVIDAD (Sector):", columnas_placeholder, key="masivo_actividad", disabled=True if 'df_masivo' not in st.session_state else False)
+    with col_m2:
+        col_ing = st.selectbox("INGRESOS:", columnas_placeholder, key="masivo_ingresos", disabled=True if 'df_masivo' not in st.session_state else False)
+    with col_m3:
+        col_emp = st.selectbox("👥 EMPLEADOS:", columnas_placeholder, key="masivo_empleados", disabled=True if 'df_masivo' not in st.session_state else False)
+        
+    st.markdown("---")
+    
+    # 2. ÁREA DE CARGA DE DATOS
     archivo = st.file_uploader("Cargar archivo Excel (.xlsx)", type=["xlsx"])
     
     if archivo is not None:
         try:
+            # Leer el dataframe y guardarlo en el estado o contexto actual
             df = pd.read_excel(archivo)
+            columnas_reales = df.columns.tolist()
+            
+            # Forzar una recarga limpia actualizando los selectores horizontales con las columnas del Excel real
+            with col_m1:
+                # Intentamos pre-seleccionar si coincide el nombre común, sino toma la primera
+                idx_sec = columnas_reales.index("Actividad") if "Actividad" in columnas_reales else 0
+                col_sec = st.selectbox("ACTIVIDAD (Sector):", columnas_reales, key="masivo_actividad_real", index=idx_sec)
+            with col_m2:
+                idx_ing = columnas_reales.index("Ingresos") if "Ingresos" in columnas_reales else 0
+                col_ing = st.selectbox("INGRESOS:", columnas_reales, key="masivo_ingresos_real", index=idx_ing)
+            with col_m3:
+                idx_emp = columnas_reales.index("Empleados") if "Empleados" in columnas_reales else 0
+                col_emp = st.selectbox("👥 EMPLEADOS:", columnas_reales, key="masivo_empleados_real", index=idx_emp)
+            
             st.write("📋 Vista previa de los datos cargados:")
             st.dataframe(df.head(3), use_container_width=True)
             
-            columnas = df.columns.tolist()
+            st.markdown(" ")
             
-            st.markdown("---")
-            st.markdown("### ⚙️ Configuración del Padrón y Período Normativo")
-            
-            # FILA HORIZONTAL DE SELECTORES SIMÉTRICA A LA PESTAÑA INDIVIDUAL
-            col_m1, col_m2, col_m3, col_m4, col_m5 = st.columns([1.5, 1.5, 1.5, 1, 1.2])
-            
-            with col_m1:
-                col_sec = st.selectbox("ACTIVIDAD:", columnas, key="masivo_actividad")
-            with col_m2:
-                col_ing = st.selectbox("INGRESOS:", columnas, key="masivo_ingresos")
-            with col_m3:
-                col_emp = st.selectbox("CANTIDAD EMPLEADOS:", columnas, key="masivo_empleados")
-            with col_m4:
-                anio_mas = st.selectbox("📅 Año Fiscal:", [2026, 2025, 2024], key="anio_masivo")
-            with col_m5:
-                mes_mas = st.selectbox("📆 Mes Fiscal:", list(NOMBRES_MESES.keys()), format_func=lambda x: NOMBRES_MESES[x], key="mes_masivo")
-            
-            st.markdown("---")
-            
-            # Botón de ejecución en el flujo principal horizontal
+            # Botón de ejecución ubicado abajo de la vista previa
             if st.button("Procesar y Buscar Inconsistencias 🚀", type="primary", use_container_width=True):
                 res_alicuotas = df.apply(lambda r: evaluar_contribuyente(anio_mas, r[col_sec], r[col_ing]), axis=1)
                 
