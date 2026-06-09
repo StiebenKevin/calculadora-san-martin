@@ -268,18 +268,18 @@ with tab2:
             if st.sidebar.button("Procesar y Buscar Inconsistencias", type="primary", use_container_width=True):
                 res_alicuotas = df.apply(lambda r: evaluar_contribuyente(anio_mas, r[col_sec], r[col_ing]), axis=1)
                 
-                df['Año_Fiscal_Auditado'] = anio_mas
-                df['Mes_Fiscal_Auditado'] = NOMBRES_MESES[mes_mas]
-                df['Valor_Módulo_Aplicado'] = obtener_valor_modulo_real(anio_mas, mes_mas)
-                df['Categoría_Calculada'] = [res[0] for res in res_alicuotas]
-                df['Alícuota_Calculada_‰'] = [res[1] for res in res_alicuotas]
-                df['Impuesto_por_Ingresos_$'] = (df[col_ing] * df['Alícuota_Calculada_‰']) / 1000
+                df['Año_Fiscal'] = anio_mas
+                df['Mes_Fiscal'] = NOMBRES_MESES[mes_mas]
+                df['Valor_Módulo'] = obtener_valor_modulo_real(anio_mas, mes_mas)
+                df['Tamaño'] = [res[0] for res in res_alicuotas]
+                df['Alícuota_‰'] = [res[1] for res in res_alicuotas]
+                df['Tasa_Determinada_$'] = (df[col_ing] * df['Alícuota_Calculada_‰']) / 1000
                 
                 res_empleados = df[col_emp].apply(lambda x: calcular_minimo_empleados(x, anio_mas, mes_mas))
                 df['Mínimo_Empleados_MF'] = [res[0] for res in res_empleados]
                 df['Mínimo_Empleados_$'] = [res[1] for res in res_empleados]
                 
-                df['Impuesto_Determinado_Oficial_$'] = df[['Impuesto_por_Ingresos_$', 'Mínimo_Empleados_$']].max(axis=1)
+                df['Tasa_Determinada_$'] = df[['Tasa_Determinada_$', 'Mínimo_Empleados_$']].max(axis=1)
                 
                 st.success(f"¡Procesamiento masivo completado para {NOMBRES_MESES[mes_mas]} / {anio_mas}!")
                 
