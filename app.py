@@ -289,7 +289,7 @@ with tab2:
         st.dataframe(df_cargado.head(3), use_container_width=True)
         st.markdown(" ")
         
-        if st.button("Procesar y Buscar Inconsistencias 🚀", type="primary", use_container_width=True):
+        if st.button("Procesar 🚀", type="primary", use_container_width=True):
             try:
                 res_alicuotas = df_cargado.apply(lambda r: evaluar_contribuyente(anio_mas, r[col_sec], r[col_ing]), axis=1)
                 
