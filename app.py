@@ -256,9 +256,9 @@ with tab2:
             
             # PASO 1: SECTORES Y SELECTORES LLEVADOS EXCLUSIVAMENTE AL SIDEBAR
             st.sidebar.markdown("### ⚙️ Configuración del Padrón")
-            col_sec = st.sidebar.selectbox("Columna SECTOR / ACTIVIDAD:", columnas)
-            col_ing = st.sidebar.selectbox("Columna INGRESOS / EMISIÓN:", columnas)
-            col_emp = st.sidebar.selectbox("Columna CANTIDAD EMPLEADOS:", columnas)
+            col_sec = st.sidebar.selectbox("ACTIVIDAD:", columnas)
+            col_ing = st.sidebar.selectbox("INGRESOS:", columnas)
+            col_emp = st.sidebar.selectbox("CANTIDAD EMPLEADOS:", columnas)
             
             st.sidebar.markdown("### 📅 Período Normativo")
             anio_mas = st.sidebar.selectbox("📅 Año Fiscal:", [2026, 2025, 2024], key="anio_masivo")
