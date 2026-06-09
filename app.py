@@ -149,7 +149,7 @@ with tab1:
             <div style="background-color: #f0f4f8; padding: 20px; border-radius: 10px; border-left: 6px solid #1e3d59; margin-bottom: 20px;">
                 <h4 style="margin: 0; color: #1e3d59; font-size: 18px;">Resultado — Período {NOMBRES_MESES[mes_ind]} / {anio_ind}</h4>
                 <p style="margin: 8px 0 0 0; font-size: 22px; color: #12232e;">
-                    Contribuyente <b>{cat.upper()}</b> (vía Base País) — Alícuota Asignada: <span style="color: #1e3d59; font-weight: bold;">{alic} ‰</span>
+                    Contribuyente <b>{cat.upper()}</b> — Alícuota Asignada: <span style="color: #1e3d59; font-weight: bold;">{alic} ‰</span>
                 </p>
             </div>
             """, 
