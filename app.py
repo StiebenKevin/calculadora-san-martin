@@ -1,15 +1,15 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px  # Librería para gráficos interactivos estilo Power BI
+import plotly.express as px
 import io
 from PIL import Image
 
 # ==============================================================================
-# 1. CONFIGURACIÓN DE LA PÁGINA E INTERFAZ
+# BLOQUE 1: CONFIGURACIÓN E INTERFAZ BASE DE LA APP
 # ==============================================================================
 st.set_page_config(page_title="Calculadora de Alícuotas - San Martín", page_icon="📊", layout="wide")
 
-# Intentar cargar el logo municipal
+# Intento de carga de Logo Institucional
 try:
     image = Image.open('logo_san_martin.png')
     st.image(image, width=250)
@@ -19,30 +19,42 @@ except:
 st.title("📊 Calculadora de Alícuotas e Inteligencia Fiscal")
 st.markdown("---")
 
+# Diccionario global para decodificar los meses fiscales
 NOMBRES_MESES = {
     1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril", 5: "Mayo", 6: "Junio",
     7: "Julio", 8: "Agosto", 9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre"
 }
 
-# ==============================================================================
-# 2. MOTOR FISCAL (LÓGICA NORMATIVA DE SAN MARTÍN)
-# ==============================================================================
-def obtener_valor_modulo_real(anio, mes):
-    if anio == 2026: return 89.00
-    elif anio == 2025:
-        if 1 <= mes <= 6: return 64.00
-        elif 7 <= mes <= 9: return 69.00
-        elif mes == 10: return 71.00
-        elif 11 <= mes <= 12: return 74.00
-    elif anio == 2024:
-        if 1 <= mes <= 3: return 26.00
-        elif 4 <= mes <= 6: return 49.40
-        elif 7 <= mes <= 8: return 52.00
-        elif 9 <= mes <= 11: return 57.00
-        elif mes == 12: return 58.00
-    return 89.00
 
-escalas_por_anio = {
+# ==============================================================================
+# BLOQUE 2: MATRICES, PARÁMETROS Y ESCALAS NORMATIVAS (HISTÓRICAS)
+# ==============================================================================
+# Aquí centralizamos todos los valores fiscales dinámicos por año y mes
+
+VALORES_MODULO_FISCAL = {
+    2026: {
+        "fijo": 89.00
+    },
+    2025: {
+        "meses": [
+            {"desde": 1, "hasta": 6, "valor": 64.00},
+            {"desde": 7, "hasta": 9, "valor": 69.00},
+            {"desde": 10, "hasta": 10, "valor": 71.00},
+            {"desde": 11, "hasta": 12, "valor": 74.00}
+        ]
+    },
+    2024: {
+        "meses": [
+            {"desde": 1, "hasta": 3, "valor": 26.00},
+            {"desde": 4, "hasta": 6, "valor": 49.40},
+            {"desde": 7, "hasta": 8, "valor": 52.00},
+            {"desde": 9, "hasta": 11, "valor": 57.00},
+            {"desde": 12, "hasta": 12, "valor": 58.00}
+        ]
+    }
+}
+
+ESCALAS_ALICUOTAS_ANUALES = {
     2026: {
         "Agropecuario": {"limite_5_a_7": 244789000, "limite_7_a_8": 368103000, "limite_8_to_12": 1187425000, "limite_12_to_15": 3492431000},
         "Industria y Minería": {"limite_5_a_7": 723725000, "limite_7_a_8": 1088308000, "limite_8_to_12": 3510670000, "limite_12_to_15": 10325497000},
@@ -66,6 +78,7 @@ escalas_por_anio = {
     }
 }
 
+# Normalizador automático de entradas de texto de Excel para rubros
 MAPEO_RUBROS = {
     "C": "Comercio", "COMERCIO": "Comercio",
     "I": "Industria y Minería", "INDUSTRIA": "Industria y Minería",
@@ -74,21 +87,48 @@ MAPEO_RUBROS = {
     "CONSTRUCCION": "Construcción", "CO": "Construcción"
 }
 
+
+# ==============================================================================
+# BLOQUE 3: FUNCIONES Y LOGICA DE COMPUTO FISCAL (EL MOTOR MATEMÁTICO)
+# ==============================================================================
+# Funciones puras de cálculo. Solo procesan entradas y devuelven liquidaciones.
+
+def determinar_valor_modulo(anio, mes):
+    """Busca en el Bloque 2 el valor del Módulo Fiscal exacto para el período."""
+    if anio not in VALORES_MODULO_FISCAL:
+        return 89.00
+    config_anio = VALORES_MODULO_FISCAL[anio]
+    if "fijo" in config_anio:
+        return config_anio["fijo"]
+    for tramo in config_anio.get("meses", []):
+        if tramo["desde"] <= mes <= tramo["hasta"]:
+            return tramo["valor"]
+    return 89.00
+
 def calcular_minimo_empleados(cantidad_empleados, anio, mes):
-    if cantidad_empleados <= 0: return 0, 0
-    elif cantidad_empleados == 1: modulos = 170
-    elif cantidad_empleados == 2: modulos = 260
-    elif cantidad_empleados == 3: modulos = 350
-    else: modulos = 350 + (cantidad_empleados - 3) * 100
+    """Calcula la cantidad de Módulos Fiscales mínimos según dotación de personal."""
+    if cantidad_empleados <= 0: 
+        return 0, 0
+    elif cantidad_empleados == 1: 
+        modulos = 170
+    elif cantidad_empleados == 2: 
+        modulos = 260
+    elif cantidad_empleados == 3: 
+        modulos = 350
+    else: 
+        modulos = 350 + (cantidad_empleados - 3) * 100
     
-    valor_modulo_especifico = obtener_valor_modulo_real(anio, mes)
+    valor_modulo_especifico = determinar_valor_modulo(anio, mes)
     return modulos, modulos * valor_modulo_especifico
 
 def evaluar_contribuyente(anio, sector_raw, ingresos_globales_anio_anterior):
+    """Aplica las escalas anuales del Bloque 2 para categorizar y fijar alícuota."""
     sector = MAPEO_RUBROS.get(str(sector_raw).strip().upper(), "Comercio")
-    if anio not in escalas_por_anio: return "Año No Válido", 0
-    escalas_anio = escalas_por_anio[anio]
-    if sector not in escalas_anio: return "Sector No Válido", 0
+    if anio not in ESCALAS_ALICUOTAS_ANUALES: 
+        return "Año No Válido", 0
+    escalas_anio = ESCALAS_ALICUOTAS_ANUALES[anio]
+    if sector not in escalas_anio: 
+        return "Sector No Válido", 0
     
     topes = escalas_anio[sector]
     if ingresos_globales_anio_anterior < topes["limite_5_a_7"]: return "Pequeño", 5
@@ -97,14 +137,16 @@ def evaluar_contribuyente(anio, sector_raw, ingresos_globales_anio_anterior):
     elif ingresos_globales_anio_anterior < topes["limite_12_to_15"]: return "Grande", 12
     else: return "Grande", 15
 
+
 # ==============================================================================
-# 3. CREACIÓN DE LAS PESTAÑAS (ACÁ SE DEFINE TAB1 Y TAB2)
+# BLOQUE 4: DEFINICIÓN DE CONTENEDORES VISUALES (PESTAÑAS)
 # ==============================================================================
 tab1, tab2 = st.tabs(["🧮 Calculadora Individual", "📂 Matriz de Inconsistencias Masiva"])
 
-# ------------------------------------------------------------------------------
-# PESTAÑA 1: CONSULTA INDIVIDUAL
-# ------------------------------------------------------------------------------
+
+# ==============================================================================
+# BLOQUE 5: PESTAÑA 1 - LOGICA E INTERFAZ INDIVIDUAL
+# ==============================================================================
 with tab1:
     st.header("Consulta Individual de Contribuyentes")
     col_a1, col_a2, col_b, col_c1, col_c2, col_d = st.columns([0.8, 1, 1.8, 1.8, 1.8, 0.8])
@@ -112,11 +154,12 @@ with tab1:
     with col_a1: anio_ind = st.selectbox("📅 Año Fiscal:", [2026, 2025, 2024], key="anio_individual")
     with col_a2: mes_ind = st.selectbox("📆 Mes Fiscal:", list(NOMBRES_MESES.keys()), format_func=lambda x: NOMBRES_MESES[x], key="mes_individual")
     with col_b: sector_sel = st.selectbox("Seleccione la Actividad:", ["Comercio", "Industria y Minería", "Servicios", "Agropecuario", "Construcción"])
-    with col_c1: ingresos_globales_num = st.number_input("Ingresos Totales del Año Anterior ($):", min_value=0.0, format="%.2f", help="Determina la alícuota anual.")
-    with col_c2: ingresos_sm_num = st.number_input("Facturación o Base Imponible Mensual ($):", min_value=0.0, format="%.2f", help="Monto neto asignado a San Martín.")
+    with col_c1: ingresos_globales_num = st.number_input("Ingresos Totales del Año Anterior ($):", min_value=0.0, format="%.2f")
+    with col_c2: ingresos_sm_num = st.number_input("Facturación o Base Imponible Mensual ($):", min_value=0.0, format="%.2f")
     with col_d: empleados_num = st.number_input("👥 Empleados:", min_value=0, step=1, value=1)
         
     if st.button("Calcular Alícuota y Mínimos", type="primary"):
+        # Ejecución conectando con el Bloque 3
         cat, alic = evaluar_contribuyente(anio_ind, sector_sel, ingresos_globales_num)
         modulos, impuesto_minimo = calcular_minimo_empleados(empleados_num, anio_ind, mes_ind)
         
@@ -129,7 +172,7 @@ with tab1:
             <div style="background-color: #f0f4f8; padding: 20px; border-radius: 10px; border-left: 6px solid #1e3d59; margin-bottom: 20px;">
                 <h4 style="margin: 0; color: #1e3d59; font-size: 18px;">Resultado — Período {NOMBRES_MESES[mes_ind]} / {anio_ind}</h4>
                 <p style="margin: 8px 0 0 0; font-size: 22px; color: #12232e;">
-                    Contribuyente <b>{cat.upper()}</b> — Alícuota Asignada (año anterior): <span style="color: #1e3d59; font-weight: bold;">{alic} ‰</span>
+                    Contribuyente <b>{cat.upper()}</b> — Alícuota Asignada: <span style="color: #1e3d59; font-weight: bold;">{alic} ‰</span>
                 </p>
             </div>
             """, unsafe_allow_html=True
@@ -140,19 +183,18 @@ with tab1:
         with col_res2: st.metric(label="Mínimo por Empleados", value=f"$ {impuesto_minimo:,.2f}", delta=f"{modulos} MF", delta_color="off")
         with col_res3: st.metric(label="MONTO DETERMINADO FINAL", value=f"$ {monto_final:,.2f}")
 
-# ------------------------------------------------------------------------------
-# PESTAÑA 2: CONTROL MASIVO + DASHBOARD ANALÍTICO
-# ------------------------------------------------------------------------------
+
+# ==============================================================================
+# BLOQUE 6: PESTAÑA 2 - INTERFAZ MASIVA + PROCESAMIENTO DE EXCEL + DASHBOARD
+# ==============================================================================
 with tab2:
     st.header("🔬 Centro de Inteligencia y Dashboard Fiscal")
     st.markdown("""
-    Cargá tu archivo vertical en crudo utilizando la plantilla estándar. El sistema procesará las diferencias de oficio
-    y consolidará de forma automática un tablero gráfico interactivo.
+    Cargá tu archivo vertical en crudo utilizando la plantilla estándar de 9 columnas fijas.
     """)
     
-    with st.expander("📋 Ver estructura requerida de la plantilla estándar (9 Columnas)"):
+    with st.expander("📋 Ver estructura requerida de la plantilla estándar"):
         st.code("CUIT | RAZON_SOCIAL | RUBRO | ING_ANUAL_PAIS | ANIO_FISCAL | MES_FISCAL | FACTURACION_MES | COEF_SM | PAGOS_MES")
-        st.caption("Nota: Para contribuyentes directos locales, el COEF_SM debe completarse con 1.")
 
     archivo = st.file_uploader("📂 Cargar Archivo de Fiscalización (.xlsx)", type=["xlsx"], key="uploader_dashboard")
     
@@ -162,10 +204,11 @@ with tab2:
             
             columnas_requeridas = ['RUBRO', 'ING_ANUAL_PAIS', 'ANIO_FISCAL', 'MES_FISCAL', 'FACTURACION_MES', 'COEF_SM', 'PAGOS_MES']
             if not all(col in df_raw.columns for col in columnas_requeridas):
-                st.error("❌ El archivo no cumple con la estructura requerida de encabezados.")
+                st.error("❌ El archivo cargado no cumple con la estructura requerida de encabezados.")
             else:
-                st.success("¡Datos cargados con éxito!")
+                st.success("¡Datos crudos mapeados con éxito!")
                 
+                # Normalización de tipos de datos en Pandas
                 df = df_raw.copy()
                 df['ING_ANUAL_PAIS'] = pd.to_numeric(df['ING_ANUAL_PAIS'], errors='coerce').fillna(0)
                 df['ANIO_FISCAL'] = pd.to_numeric(df['ANIO_FISCAL'], errors='coerce').fillna(2026).astype(int)
@@ -174,7 +217,7 @@ with tab2:
                 df['COEF_SM'] = pd.to_numeric(df['COEF_SM'], errors='coerce').fillna(1)
                 df['PAGOS_MES'] = pd.to_numeric(df['PAGOS_MES'], errors='coerce').fillna(0)
                 
-                # Procesamiento por fila en Pandas
+                # --- PROCESAMIENTO DE FILAS (CONEXIÓN CON EL MOTOR FISCAL - BLOQUE 3) ---
                 res_eval = df.apply(lambda r: evaluar_contribuyente(r['ANIO_FISCAL'], r['RUBRO'], r['ING_ANUAL_PAIS']), axis=1)
                 df['Fisca_Tamaño'] = [r[0] for r in res_eval]
                 df['Fisca_Alícuota_‰'] = [r[1] for r in res_eval]
@@ -182,6 +225,7 @@ with tab2:
                 df['Fisca_Base_San_Martín'] = df['FACTURACION_MES'] * df['COEF_SM']
                 df['Fisca_Tasa_por_Ingresos'] = (df['Fisca_Base_San_Martín'] * df['Fisca_Alícuota_‰']) / 1000
                 
+                # Hardcodeo preventivo de 1 empleado mínimo para el cálculo masivo corporativo
                 res_minimos = df.apply(lambda r: calcular_minimo_empleados(1, r['ANIO_FISCAL'], r['MES_FISCAL']), axis=1)
                 df['Fisca_Mínimo_Fijo'] = [r[1] for r in res_minimos]
                 
@@ -196,30 +240,25 @@ with tab2:
 
                 # --- FILTROS DINÁMICOS EN SIDEBAR ---
                 st.sidebar.header("🎯 Filtros del Dashboard")
-                anios_disponibles = sorted(df['ANIO_FISCAL'].unique())
-                anio_sel = st.sidebar.multiselect("Filtrar por Año Fiscal:", anios_disponibles, default=anios_disponibles)
+                anio_sel = st.sidebar.multiselect("Filtrar por Año Fiscal:", sorted(df['ANIO_FISCAL'].unique()), default=sorted(df['ANIO_FISCAL'].unique()))
+                mes_sel = st.sidebar.multiselect("Filtrar por Mes:", sorted(df['MES_FISCAL'].unique()), format_func=lambda x: NOMBRES_MESES.get(x, x), default=sorted(df['MES_FISCAL'].unique()))
+                rubro_sel = st.sidebar.multiselect("Filtrar por Rubro/Actividad:", df['RUBRO'].unique(), default=df['RUBRO'].unique())
                 
-                meses_disponibles = sorted(df['MES_FISCAL'].unique())
-                mes_sel = st.sidebar.multiselect("Filtrar por Mes:", meses_disponibles, format_func=lambda x: NOMBRES_MESES.get(x, x), default=meses_disponibles)
+                # Ejecución de la máscara de filtrado
+                df_filtrado = df[(df['ANIO_FISCAL'].isin(anio_sel)) & (df['MES_FISCAL'].isin(mes_sel)) & (df['RUBRO'].isin(rubro_sel))]
                 
-                rubros_disponibles = df['RUBRO'].unique()
-                rubro_sel = st.sidebar.multiselect("Filtrar por Rubro/Actividad:", rubros_disponibles, default=rubros_disponibles)
-                
-                df_filtrado = df[
-                    (df['ANIO_FISCAL'].isin(anio_sel)) & 
-                    (df['MES_FISCAL'].isin(mes_sel)) & 
-                    (df['RUBRO'].isin(rubro_sel))
-                ]
-                
+                # --- RENDERIZADO GRÁFICO DEL DASHBOARD INTERACTIVO ---
                 st.markdown("---")
                 st.subheader("📊 Tablero de Control de Gestión de Inteligencia Fiscal")
                 
+                # Cálculos rápidos de KPIs
                 total_contribuyentes = len(df_filtrado)
                 df_inconsistentes = df_filtrado[df_filtrado['Fisca_Diferencia_Desvío'] > 10]
                 cant_inconsistentes = len(df_inconsistentes)
                 monto_total_evadido = df_inconsistentes['Fisca_Diferencia_Desvío'].sum()
                 porcentaje_desvio = (cant_inconsistentes / total_contribuyentes * 100) if total_contribuyentes > 0 else 0
                 
+                # Impresión de Tarjetas KPI
                 kpi1, kpi2, kpi3 = st.columns(3)
                 with kpi1: st.metric(label="👥 Contribuyentes Auditados", value=f"{total_contribuyentes:,}")
                 with kpi2: st.metric(label="🔴 Casos con Inconsistencia", value=f"{cant_inconsistentes:,}", delta=f"{porcentaje_desvio:.1f}% del padrón", delta_color="inverse")
@@ -227,6 +266,7 @@ with tab2:
                 
                 st.markdown("---")
                 
+                # Gráficos en columnas (Torta y Barras)
                 col_graf1, col_graf2 = st.columns(2)
                 with col_graf1:
                     st.markdown("##### 🍕 Distribución del Padrón por Estado de Auditoría")
@@ -254,6 +294,7 @@ with tab2:
                 
                 st.markdown("---")
                 
+                # Gráfico histórico de línea temporal (si hay más de 1 mes seleccionado)
                 if len(df_filtrado['MES_FISCAL'].unique()) > 1:
                     st.markdown("##### 📈 Evolución Mensual del Monto Total Omitido Detectado")
                     df_linea = df_inconsistentes.groupby(['ANIO_FISCAL', 'MES_FISCAL'])['Fisca_Diferencia_Desvío'].sum().reset_index()
@@ -264,6 +305,7 @@ with tab2:
                     st.plotly_chart(fig_linea, use_container_width=True)
                     st.markdown("---")
 
+                # Visualización de tabla de datos y descarga
                 st.markdown("### 📋 Detalle de Contribuyentes Filtrados (Ordenado por Gravedad)")
                 df_mostrar = df_filtrado.sort_values(by='Fisca_Diferencia_Desvío', ascending=False)
                 st.dataframe(df_mostrar, use_container_width=True)
