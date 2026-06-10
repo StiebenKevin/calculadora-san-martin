@@ -13,45 +13,32 @@ try:
 except:
     st.subheader("Municipalidad de General San Martín")
 
-st.title("📊 Calculadora de Alícuotas")
+st.title("📊 Calculadora de Alícuotas e Inteligencia Fiscal")
 st.markdown("---")
 
-# Nombre de los meses para los selectbox
 NOMBRES_MESES = {
     1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril", 5: "Mayo", 6: "Junio",
     7: "Julio", 8: "Agosto", 9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre"
 }
 
-# 1. FUNCIÓN MATRIZ: DETERMINA EL VALOR DEL MÓDULO FISCAL SEGÚN DECRETO REAL
+# 1. VALOR DEL MÓDULO FISCAL (Histórico según Decretos)
 def obtener_valor_modulo_real(anio, mes):
     if anio == 2026:
-        return 89.00  # Desde 01/01/2026 al presente ($89.00)
-        
+        return 89.00
     elif anio == 2025:
-        if 1 <= mes <= 6:
-            return 64.00  # Del 01/01/2025 al 30/06/2025
-        elif 7 <= mes <= 9:
-            return 69.00  # Del 01/07/2025 al 30/09/2025
-        elif mes == 10:
-            return 71.00  # Del 01/10/2025 al 31/10/2025
-        elif 11 <= mes <= 12:
-            return 74.00  # Del 01/11/2025 al 31/12/2025
-            
+        if 1 <= mes <= 6: return 64.00
+        elif 7 <= mes <= 9: return 69.00
+        elif mes == 10: return 71.00
+        elif 11 <= mes <= 12: return 74.00
     elif anio == 2024:
-        if 1 <= mes <= 3:
-            return 26.00  # Del 01/01/2024 al 31/03/2024
-        elif 4 <= mes <= 6:
-            return 49.40  # Del 01/04/2024 al 30/06/2024
-        elif 7 <= mes <= 8:
-            return 52.00  # Del 01/07/2024 al 31/08/2024
-        elif 9 <= mes <= 11:
-            return 57.00  # Del 01/09/2024 al 30/11/2024
-        elif mes == 12:
-            return 58.00  # Del 01/12/2024 al 31/12/2024
-            
-    return 89.00  # Valor por defecto seguro
+        if 1 <= mes <= 3: return 26.00
+        elif 4 <= mes <= 6: return 49.40
+        elif 7 <= mes <= 8: return 52.00
+        elif 9 <= mes <= 11: return 57.00
+        elif mes == 12: return 58.00
+    return 89.00
 
-# 2. ESTRUCTURA DE ESCALAS POR AÑO FISCAL (Determina tamaño por Base País)
+# 2. ESCALAS DE ALÍCUOTAS (Evaluadas sobre Ingresos Globales / Base País)
 escalas_por_anio = {
     2026: {
         "Agropecuario": {"limite_5_a_7": 244789000, "limite_7_a_8": 368103000, "limite_8_to_12": 1187425000, "limite_12_to_15": 3492431000},
@@ -76,70 +63,58 @@ escalas_por_anio = {
     }
 }
 
-# 3. FUNCIÓN PARA CALCULAR EL MÍNIMO POR EMPLEADOS
-def calcular_minimo_empleados(cantidad_empleados, anio, mes):
-    if cantidad_empleados <= 0:
-        return 0, 0
-    elif cantidad_empleados == 1:
-        modulos = 170
-    elif cantidad_empleados == 2:
-        modulos = 260
-    elif cantidad_empleados == 3:
-        modulos = 350
-    else:
-        modulos = 350 + (cantidad_empleados - 3) * 100
-        
-    valor_modulo_especifico = obtener_valor_modulo_real(anio, mes)
-    monto_pesos = modulos * valor_modulo_especifico
-    return modulos, monto_pesos
+# Diccionario para traducir códigos cortos de rubros a nombres formales de escala
+MAPEO_RUBROS = {
+    "C": "Comercio", "COMERCIO": "Comercio",
+    "I": "Industria y Minería", "INDUSTRIA": "Industria y Minería",
+    "S": "Servicios", "SERVICIOS": "Servicios",
+    "A": "Agropecuario", "AGROPECUARIO": "Agropecuario",
+    "CONSTRUCCION": "Construcción", "CO": "Construcción"
+}
 
-# 4. FUNCIÓN DE EVALUACIÓN DE ALÍCUOTA BASADA EN INGRESOS GLOBALES (BASE PAÍS)
-def evaluar_contribuyente(anio, sector, ingresos_globales):
-    if anio not in escalas_por_anio:
-        return "Año No Válido", 0
+def calcular_minimo_empleados(cantidad_empleados, anio, mes):
+    if cantidad_empleados <= 0: return 0, 0
+    elif cantidad_empleados == 1: modulos = 170
+    elif cantidad_empleados == 2: modulos = 260
+    elif cantidad_empleados == 3: modulos = 350
+    else: modulos = 350 + (cantidad_empleados - 3) * 100
     
+    valor_modulo_especifico = obtener_valor_modulo_real(anio, mes)
+    return modulos, modulos * valor_modulo_especifico
+
+def evaluar_contribuyente(anio, sector_raw, ingresos_globales):
+    # Homologar el código de rubro (ej: 'C' -> 'Comercio')
+    sector = MAPEO_RUBROS.get(str(sector_raw).strip().upper(), "Comercio")
+    
+    if anio not in escalas_por_anio: return "Año No Válido", 0
     escalas_anio = escalas_por_anio[anio]
-    if sector not in escalas_anio:
-        return "Sector No Válido", 0
+    if sector not in escalas_anio: return "Sector No Válido", 0
     
     topes = escalas_anio[sector]
-    
-    if ingresos_globales < topes["limite_5_a_7"]:
-        return "Pequeño", 5
-    elif ingresos_globales < topes["limite_7_a_8"]:
-        return "Pequeño", 7
-    elif ingresos_globales < topes["limite_8_to_12"]:
-        return "Mediano", 8
-    elif ingresos_globales < topes["limite_12_to_15"]:
-        return "Grande", 12
-    else:
-        return "Grande", 15
+    if ingresos_globales < topes["limite_5_a_7"]: return "Pequeño", 5
+    elif ingresos_globales < topes["limite_7_a_8"]: return "Pequeño", 7
+    elif ingresos_globales < topes["limite_8_to_12"]: return "Mediano", 8
+    elif ingresos_globales < topes["limite_12_to_15"]: return "Grande", 12
+    else: return "Grande", 15
 
-# Pestañas de la aplicación
-tab1, tab2 = st.tabs(["🧮 Calculadora Individual", "📂 Calculadora Masiva (Excel)"])
+tab1, tab2 = st.tabs(["🧮 Calculadora Individual", "📂 Matriz de Inconsistencias Masiva"])
 
+# --- PESTAÑA 1: CONSULTA INDIVIDUAL ---
 with tab1:
     st.header("Consulta Individual")
     col_a1, col_a2, col_b, col_c1, col_c2, col_d = st.columns([0.8, 1, 1.8, 1.8, 1.8, 0.8])
     
-    with col_a1:
-        anio_ind = st.selectbox("📅 Año:", [2026, 2025, 2024], key="anio_individual")
-    with col_a2:
-        mes_ind = st.selectbox("📆 Mes:", list(NOMBRES_MESES.keys()), format_func=lambda x: NOMBRES_MESES[x], key="mes_individual")
-    with col_b:
-        sector_sel = st.selectbox("Seleccione la Actividad:", list(escalas_por_anio[anio_ind].keys()))
-    with col_c1:
-        ingresos_globales_num = st.number_input("Ingreso total gravado,no gravado y exento:", min_value=0.0, step=10000.0, format="%.2f", help="Determina el tamaño del contribuyente y su alícuota.")
-    with col_c2:
-        ingresos_sm_num = st.number_input("Base San Martín:", min_value=0.0, step=10000.0, format="%.2f", help="Monto sobre el cual se aplicará la alícuota calculada.")
-    with col_d:
-        empleados_num = st.number_input("👥 Empleados:", min_value=0, step=1, value=1)
+    with col_a1: anio_ind = st.selectbox("📅 Año:", [2026, 2025, 2024], key="anio_individual")
+    with col_a2: mes_ind = st.selectbox("📆 Mes:", list(NOMBRES_MESES.keys()), format_func=lambda x: NOMBRES_MESES[x], key="mes_individual")
+    with col_b: sector_sel = st.selectbox("Seleccione la Actividad:", ["Comercio", "Industria y Minería", "Servicios", "Agropecuario", "Construcción"])
+    with col_c1: ingresos_globales_num = st.number_input("Ingresos Anuales Base País ($):", min_value=0.0, format="%.2f")
+    with col_c2: ingresos_sm_num = st.number_input("Base Imponible San Martín ($):", min_value=0.0, format="%.2f")
+    with col_d: empleados_num = st.number_input("👥 Empleados:", min_value=0, step=1, value=1)
         
     if st.button("Calcular Alícuota y Mínimos", type="primary"):
         cat, alic = evaluar_contribuyente(anio_ind, sector_sel, ingresos_globales_num)
         modulos, impuesto_minimo = calcular_minimo_empleados(empleados_num, anio_ind, mes_ind)
         
-        # El impuesto determinado por alícuota se calcula estrictamente sobre el ingreso local de San Martín
         impuesto_por_alicuota = (ingresos_sm_num * alic) / 1000
         monto_final = max(impuesto_por_alicuota, impuesto_minimo)
         
@@ -152,194 +127,134 @@ with tab1:
                     Contribuyente <b>{cat.upper()}</b> — Alícuota Asignada: <span style="color: #1e3d59; font-weight: bold;">{alic} ‰</span>
                 </p>
             </div>
-            """, 
-            unsafe_allow_html=True
+            """, unsafe_allow_html=True
         )
         
         col_res1, col_res2, col_res3 = st.columns(3)
-        with col_res1:
-            st.metric(label="Tasa por Alícuota (Sobre Ingresos San Martín)", value=f"$ {impuesto_por_alicuota:,.2f}")
-        with col_res2:
-            st.metric(label=f"Mínimo por Empleados ({NOMBRES_MESES[mes_ind]} {anio_ind})", value=f"$ {impuesto_minimo:,.2f}", delta=f"{modulos} MF", delta_color="off")
-        with col_res3:
-            st.metric(label="MONTO DETERMINADO FINAL", value=f"$ {monto_final:,.2f}")
-            
-        st.markdown("### 🔍 Cuadros de Referencia")
-        col_tab_a, col_tab_b = st.columns(2)
-        
-        with col_tab_a:
-            t = escalas_por_anio[anio_ind][sector_sel]
-            st.markdown(f"**Escala de Alícuotas {anio_ind}: {sector_sel}**")
-            
-            tabla_escalas_html = f"""
-            <table style="width:100%; border-collapse: collapse; margin-top: 10px; font-size: 14px;">
-                <tr style="background-color: #1e3d59; color: white; text-align: left;">
-                    <th style="padding: 8px; border: 1px solid #ddd;">Rango de Ingresos Brutos Anuales (Globales)</th>
-                    <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Alícuota</th>
-                    <th style="padding: 8px; border: 1px solid #ddd;">Segmento</th>
-                </tr>
-                <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd;">Menos de ${t['limite_5_a_7']:,}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold;">5 ‰</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; color: #2d7f5e;">Pequeño</td>
-                </tr>
-                <tr style="background-color: #f9f9f9;">
-                    <td style="padding: 8px; border: 1px solid #ddd;">Desde ${t['limite_5_a_7']:,} hasta ${t['limite_7_a_8']-1:,}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold;">7 ‰</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; color: #2d7f5e;">Pequeño</td>
-                </tr>
-                <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd;">Desde ${t['limite_7_a_8']:,} hasta ${t['limite_8_to_12']-1:,}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold;">8 ‰</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; color: #b7791f;">Mediano</td>
-                </tr>
-                <tr style="background-color: #f9f9f9;">
-                    <td style="padding: 8px; border: 1px solid #ddd;">Desde ${t['limite_8_to_12']:,} hasta ${t['limite_12_to_15']-1:,}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold;">12 ‰</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; color: #c53030;">Grande</td>
-                </tr>
-                <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${t['limite_12_to_15']:,} o más</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold;">15 ‰</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; color: #c53030;">Grande</td>
-                </tr>
-            </table>
-            """
-            st.markdown(tabla_escalas_html, unsafe_allow_html=True)
-            
-        with col_tab_b:
-            mod_actual = obtener_valor_modulo_real(anio_ind, mes_ind)
-            st.markdown(f"**Mínimos (Módulo Fiscal {NOMBRES_MESES[mes_ind]} {anio_ind}: ${mod_actual:.2f})**")
-            
-            tabla_minimos_html = f"""
-            <table style="width:100%; border-collapse: collapse; margin-top: 10px; font-size: 14px;">
-                <tr style="background-color: #1e3d59; color: white; text-align: left;">
-                    <th style="padding: 8px; border: 1px solid #ddd;">Cantidad de Empleados</th>
-                    <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Módulos (MF)</th>
-                    <th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Importe en Pesos</th>
-                </tr>
-                <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd;">1 Empleado</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">170 MF</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: right; font-weight: bold;">$ {170 * mod_actual:,.2f}</td>
-                </tr>
-                <tr style="background-color: #f9f9f9;">
-                    <td style="padding: 8px; border: 1px solid #ddd;">2 Empleados</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">260 MF</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: right; font-weight: bold;">$ {260 * mod_actual:,.2f}</td>
-                </tr>
-                <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd;">3 Empleados</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">350 MF</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: right; font-weight: bold;">$ {350 * mod_actual:,.2f}</td>
-                </tr>
-                <tr style="background-color: #f9f9f9;">
-                    <td style="padding: 8px; border: 1px solid #ddd;">4 o más Empleados</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">350 + 100 por adicional</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: right; font-weight: bold;">$ {350 * mod_actual:,.2f} + $ {100 * mod_actual:,.2f} c/u</td>
-                </tr>
-            </table>
-            """
-            st.markdown(tabla_minimos_html, unsafe_allow_html=True)
+        with col_res1: st.metric(label="Tasa por Alícuota (Sobre Base San Martín)", value=f"$ {impuesto_por_alicuota:,.2f}")
+        with col_res2: st.metric(label=f"Mínimo por Empleados", value=f"$ {impuesto_minimo:,.2f}", delta=f"{modulos} MF", delta_color="off")
+        with col_res3: st.metric(label="MONTO DETERMINADO FINAL", value=f"$ {monto_final:,.2f}")
 
+# --- PESTAÑA 2: CONTROL DE INCONSISTENCIAS MASIVO ---
 with tab2:
-    st.header("Control de Inconsistencias Masivo")
-    st.markdown("Configurá el período normativo y mapeá los campos de ingresos (Base País vs Local). Luego cargá el padrón.")
+    st.header("Análisis de Inconsistencias Avanzado (Convenio Multilateral / Local)")
+    st.markdown("Cargá el padrón de fiscalización para ejecutar el cálculo encadenado desde los Ingresos Totales hasta el saldo final devengado.")
     
-    # Pre-cargar archivo de forma limpia
-    archivo = st.file_uploader("Cargar archivo Excel (.xlsx)", type=["xlsx"])
+    archivo = st.file_uploader("Cargar Padrón Excel (.xlsx)", type=["xlsx"])
     
-    columnas_selectores = ["Subí un archivo para mapear"]
+    columnas = ["Subí un archivo para mapear"]
     deshabilitado = True
-    df_cargado = None
+    df = None
     
     if archivo is not None:
         try:
-            df_cargado = pd.read_excel(archivo)
-            columnas_selectores = df_cargado.columns.tolist()
+            df = pd.read_excel(archivo)
+            columnas = df.columns.tolist()
             deshabilitado = False
         except Exception as e:
-            st.error(f"Error al leer el archivo: {e}")
+            st.error(f"Error al abrir archivo: {e}")
             
-    st.markdown("---")
-    st.markdown("### ⚙️ Configuración del Padrón y Mapeo de Columnas")
+    st.markdown("### ⚙️ Mapeo de Columnas del Circuito de Fiscalización")
     
-    # FILA HORIZONTAL ÚNICA EXPANDIDA PARA ENTRAR LA DOBLE LÓGICA DE INGRESOS
-    col_m1, col_m2_global, col_m2_local, col_m3, col_m4, col_m5 = st.columns([1.5, 1.5, 1.5, 1.2, 0.9, 1.1])
+    # 2 Filas de selectores para acomodar el flujo completo sin apretar la pantalla
+    col1, col2, col3, col4 = st.columns(4)
+    col5, col6, col7, col8 = st.columns(4)
     
-    with col_m1:
-        idx_sec = columnas_selectores.index("ACTIVIDAD") if "ACTIVIDAD" in columnas_selectores else 0
-        col_sec = st.selectbox("ACTIVIDAD (Sector):", columnas_selectores, key="masivo_actividad", disabled=deshabilitado, index=idx_sec)
+    with col1:
+        c_rubro = st.selectbox("Rubro/Actividad (Col. T):", columnas, disabled=deshabilitado, index=columnas.index("RUBRO") if "RUBRO" in columnas else 0)
+    with col2:
+        c_ing_totales = st.selectbox("Ingresos Totales (Col. Y):", columnas, disabled=deshabilitado, index=columnas.index("INGRESOS SEGÚN IIBB 2023") if "INGRESOS SEGÚN IIBB 2023" in columnas else 0)
+    with col3:
+        c_coef_arba = st.selectbox("Coeficiente ARBA (Col. Z):", columnas, disabled=deshabilitado, index=columnas.index("COEF IIBB 2023 BS AS") if "COEF IIBB 2023 BS AS" in columnas else 0)
+    with col4:
+        c_imp_det_arba = st.selectbox("Imp. Det. ARBA (Col. AC):", columnas, disabled=deshabilitado, index=columnas.index("IMP DET IIBB") if "IMP DET IIBB" in columnas else 0)
         
-    with col_m2_global:
-        idx_global = columnas_selectores.index("BASE_PAIS") if "BASE_PAIS" in columnas_selectores else (columnas_selectores.index("INGRESOS_GLOBALES") if "INGRESOS_GLOBALES" in columnas_selectores else 0)
-        col_ing_global = st.selectbox("BASE PAÍS (Alícuota):", columnas_selectores, key="masivo_ingresos_global", disabled=deshabilitado, index=idx_global, help="Columna para determinar el tamaño y la alícuota.")
-        
-    with col_m2_local:
-        idx_local = columnas_selectores.index("INGRESOS_SM") if "INGRESOS_SM" in columnas_selectores else (columnas_selectores.index("INGRESOS") if "INGRESOS" in columnas_selectores else 0)
-        col_ing_local = st.selectbox("INGRESOS SAN MARTÍN:", columnas_selectores, key="masivo_ingresos_local", disabled=deshabilitado, index=idx_local, help="Columna sobre la que se calculará el impuesto.")
-        
-    with col_m3:
-        idx_emp = columnas_selectores.index("EMPLEADOS") if "EMPLEADOS" in columnas_selectores else 0
-        col_emp = st.selectbox("👥 EMPLEADOS:", columnas_selectores, key="masivo_empleados", disabled=deshabilitado, index=idx_emp)
-        
-    with col_m4:
-        anio_mas = st.selectbox("📅 Año Fiscal:", [2026, 2025, 2024], key="anio_masivo")
-        
-    with col_m5:
-        mes_mas = st.selectbox("📆 Mes Fiscal:", list(NOMBRES_MESES.keys()), format_func=lambda x: NOMBRES_MESES[x], key="mes_masivo")
-            
-    st.markdown("---")
-    
-    # 3. PROCESAMIENTO Y VISTA PREVIA MASIVA
-    if df_cargado is not None:
-        st.write("📋 Vista previa de los datos cargados:")
-        st.dataframe(df_cargado.head(3), use_container_width=True)
-        st.markdown(" ")
-        
-        if st.button("Procesar y Buscar Inconsistencias Masivas 🚀", type="primary", use_container_width=True):
+    with col5:
+        c_coef_sm = st.selectbox("Coeficiente San Martín (Col. AE):", columnas, disabled=deshabilitado, index=columnas.index("COEF SAN MARTIN 2023") if "COEF SAN MARTIN 2023" in columnas else 0)
+    with col6:
+        c_empleados = st.selectbox("👥 Cantidad Empleados:", columnas, disabled=deshabilitado, index=columnas.index("EMPLEADOS") if "EMPLEADOS" in columnas else 0)
+    with col7:
+        c_pagos = st.selectbox("💰 Pagos Realizados / DDJJ (Col. AL):", columnas, disabled=deshabilitado, index=columnas.index("PAGOS 2023") if "PAGOS 2023" in columnas else 0)
+    with col8:
+        st.markdown("<p style='margin-bottom:-5px; font-size:14px; color:gray;'>Período de Evaluación</p>", unsafe_allow_html=True)
+        sub_col1, sub_col2 = st.columns(2)
+        with sub_col1: anio_m = st.selectbox("Año:", [2026, 2025, 2024], key="am")
+        with sub_col2: mes_m = st.selectbox("Mes:", list(NOMBRES_MESES.keys()), format_func=lambda x: NOMBRES_MESES[x], key="mm")
+
+    if df is not None:
+        st.markdown("---")
+        if st.button("Correr Auditoría de Oficio y Buscar Desvíos 🚀", type="primary", use_container_width=True):
             try:
-                # Se determina la alícuota usando la columna de ingresos globales (Base País)
-                res_alicuotas = df_cargado.apply(lambda r: evaluar_contribuyente(anio_mas, r[col_sec], r[col_ing_global]), axis=1)
+                # Asegurar valores numéricos y rellenar nulos estratégicamente
+                df[c_ing_totales] = pd.to_numeric(df[c_ing_totales], errors='coerce').fillna(0)
+                df[c_coef_arba] = pd.to_numeric(df[c_coef_arba], errors='coerce').fillna(0)
+                df[c_imp_det_arba] = pd.to_numeric(df[c_imp_det_arba], errors='coerce').fillna(0)
+                df[c_coef_sm] = pd.to_numeric(df[c_coef_sm], errors='coerce').fillna(0)
+                df[c_empleados] = pd.to_numeric(df[c_empleados], errors='coerce').fillna(0).astype(int)
+                df[c_pagos] = pd.to_numeric(df[c_pagos], errors='coerce').fillna(0)
                 
-                df_cargado['Año_Fiscal'] = anio_mas
-                df_cargado['Mes_Fiscal'] = NOMBRES_MESES[mes_mas]
-                df_cargado['Valor_Módulo'] = obtener_valor_modulo_real(anio_mas, mes_mas)
-                df_cargado['Tamaño'] = [res[0] for res in res_alicuotas]
-                df_cargado['Alícuota_‰'] = [res[1] for res in res_alicuotas]
+                # --- PASO 1: Determinar Alícuota vía Escala e Ingresos Globales ---
+                res_eval = df.apply(lambda r: evaluar_contribuyente(anio_m, r[c_rubro], r[c_ing_totales]), axis=1)
+                df['Fisca_Tamaño'] = [r[0] for r in res_eval]
+                df['Fisca_Alícuota_‰'] = [r[1] for r in res_eval]
                 
-                # Cálculo de la tasa por ingresos usando ESTRICTAMENTE la columna local de San Martín
-                df_cargado['Tasa_por_Ingresos_$'] = (df_cargado[col_ing_local] * df_cargado['Alícuota_‰']) / 1000
+                # --- PASO 2: Reconstrucción de cascada impositiva territorial ---
+                # Ingresos Totales x Coeficiente ARBA
+                df['Fisca_Base_Imponible_PBA'] = df[c_ing_totales] * df[c_coef_arba]
+                # Base PBA Menos Impuesto Determinado ARBA
+                df['Fisca_Base_PBA_Final'] = df['Fisca_Base_Imponible_PBA'] - df[c_imp_det_arba]
+                # Base PBA Final x Coeficiente San Martín = Base Gravada Local real
+                df['Fisca_Base_San_Martín'] = df['Fisca_Base_PBA_Final'] * df[c_coef_sm]
                 
-                res_empleados = df_cargado[col_emp].apply(lambda x: calcular_minimo_empleados(x, anio_mas, mes_mas))
-                df_cargado['Mínimo_Empleados_MF'] = [res[0] for res in res_empleados]
-                df_cargado['Mínimo_Empleados_$'] = [res[1] for res in res_empleados]
+                # --- PASO 3: Cálculo del Impuesto Teórico por Alícuota vs Mínimos ---
+                df['Fisca_Tasa_por_Ingresos'] = (df['Fisca_Base_San_Martín'] * df['Fisca_Alícuota_‰']) / 1000
                 
-                df_cargado['Impuesto_Determinado_$'] = df_cargado[['Tasa_por_Ingresos_$', 'Mínimo_Empleados_$']].max(axis=1)
+                res_minimos = df[c_empleados].apply(lambda x: calcular_minimo_empleados(x, anio_m, mes_m))
+                df['Fisca_Mínimo_Empleados'] = [r[1] for r in res_minimos]
                 
-                st.success(f"¡Procesamiento masivo completado para {NOMBRES_MESES[mes_mas]} / {anio_mas}!")
+                # El impuesto determinado definitivo de la tasa es el mayor entre la alícuota y el mínimo
+                df['Fisca_Impuesto_Determinado'] = df[['Fisca_Tasa_por_Ingresos', 'Fisca_Mínimo_Empleados']].max(axis=1)
                 
-                st.dataframe(df_cargado, use_container_width=True, column_config={
-                    col_ing_global: st.column_config.NumberColumn(col_ing_global, format="$ %.2f"),
-                    col_ing_local: st.column_config.NumberColumn(col_ing_local, format="$ %.2f"),
-                    'Valor_Módulo': st.column_config.NumberColumn('Módulo ($)', format="$ %.2f"),
-                    'Tasa_por_Ingresos_$': st.column_config.NumberColumn('Tasa por Ingresos', format="$ %.2f"),
-                    'Mínimo_Empleados_$': st.column_config.NumberColumn('Mínimo por Empleados ($)', format="$ %.2f"),
-                    'Impuesto_Determinado_$': st.column_config.NumberColumn('Monto Determinado Final', format="$ %.2f")
-                })
+                # --- PASO 4: Neteo con Pagos Realizados y Cálculo de Inconsistencia ---
+                df['Fisca_Diferencia_Desvío'] = df['Fisca_Impuesto_Determinado'] - df[c_pagos]
                 
+                # Clasificar estado fiscal
+                def definir_estado(dif):
+                    if dif > 10: return "🔴 BAJO PAGO / INCONSISTENTE"
+                    elif dif < -10: return "🟢 SALDO A FAVOR"
+                    return "⚪ CORRECTO / NETEADO"
+                    
+                df['Fisca_Estado_Auditoría'] = df['Fisca_Diferencia_Desvío'].apply(definir_estado)
+                
+                st.success("¡Análisis de consistencia finalizado con éxito!")
+                
+                # Métricas consolidadas del padrón procesado
+                inconsistentes = df[df['Fisca_Diferencia_Desvío'] > 10]
+                m_tot_inconsistencias = inconsistentes['Fisca_Diferencia_Desvío'].sum()
+                
+                m1, m2, m3 = st.columns(3)
+                with m1: st.metric("Contribuyentes Analizados", f"{len(df)}")
+                with m2: st.metric("Casos con Inconsistencias (Bajo Pago)", f"{len(inconsistentes)}", delta=f"{len(inconsistentes)/len(df)*100:.1f}% del padrón", delta_color="inverse")
+                with m3: st.metric("Monto Total Presunto Evadido/Omitido", f"$ {m_tot_inconsistencias:,.2f}")
+                
+                # Mostrar resultados ordenados por el desvío más crítico
+                st.markdown("### 📋 Vista de Resultados (Ordenado por Gravedad del Desvío)")
+                df_mostrar = df.sort_values(by='Fisca_Diferencia_Desvío', ascending=False)
+                st.dataframe(df_mostrar, use_container_width=True)
+                
+                # Generación del archivo descargable
                 output = io.BytesIO()
                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                    df_cargado.to_excel(writer, index=False, sheet_name=f'Auditoria_{mes_mas}_{anio_mas}')
+                    df_mostrar.to_excel(writer, index=False, sheet_name='Resultados_Fiscalizacion')
                 processed_data = output.getvalue()
                 
-                st.markdown(" ")
                 st.download_button(
-                    label=f"📥 Descargar Reporte de Auditoría {NOMBRES_MESES[mes_mas]}_{anio_mas}",
+                    label="📥 Descargar Padrón Completo con Auditoría de Oficio",
                     data=processed_data,
-                    file_name=f"control_fiscal_masivo_{NOMBRES_MESES[mes_mas]}_{anio_mas}.xlsx",
+                    file_name=f"auditoria_inteligencia_fiscal_{NOMBRES_MESES[mes_m]}_{anio_m}.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     use_container_width=True
                 )
+                
             except Exception as e:
-                st.error(f"Error al procesar la matriz tributaria: {e}")
+                st.error(f"Ocurrió un error al procesar el cálculo en cascada de las columnas: {e}")
